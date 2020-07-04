@@ -1,0 +1,128 @@
+﻿Imports System.IO
+
+Module ProcessingLoop
+    Public SlideshowTimer As Timers.Timer
+
+    Public Desktop As DesktopClient
+    Public Downloader As DownloadClient
+
+    Public CurrImages As New SortedList(Of Integer, MyImage)
+    Public NextImage As MyImage
+
+    Private _isStillProcessing As Boolean
+    Private _lastMonitor As Integer
+
+    Public Sub ProcessingLoop(sender As Object, e As Timers.ElapsedEventArgs)
+        If _isStillProcessing Then
+            Log(LogLvl.Warning, "Loop is still processing...")
+            Return ' Never run the loop concurrent
+        End If
+        Try
+            _isStillProcessing = True
+
+            'Next image will be nothing on the first run
+            If NextImage IsNot Nothing Then
+                'Get next available monitor
+                Dim nextMonitor = GetNextMonitor()
+
+                'Skip if no monitor is available
+                If nextMonitor = -1 Then
+                    Log(LogLvl.Warning, "No monitor was available for output")
+                    Return
+                End If
+
+                'Save next image to history
+                Dim filePath = IO.Path.Combine(CFG.DirHistory, $"{NextImage.SourceBooru}_{NextImage.Id}{NextImage.Extension}")
+                Using fs = IO.File.OpenWrite(filePath)
+                    NextImage.Stream.CopyTo(fs)
+                End Using
+                NextImage.Stream.Dispose() 'Can be removed from memory now
+                NextImage.Filepath = filePath
+
+                'Set next image wallpaper
+                Desktop.SetWallpaper(nextMonitor, filePath)
+
+                'Set next image as curr image
+                If CurrImages.ContainsKey(nextMonitor) Then
+                    CurrImages(nextMonitor) = NextImage
+                Else
+                    CurrImages.Add(nextMonitor, NextImage)
+                End If
+            End If
+
+            'Delete everything but the last 10 'ToDo: Configurable?
+            Dim di = New DirectoryInfo(CFG.DirHistory)
+            Dim fiArray = di.GetFiles()
+            If fiArray.Count > CFG.MaxHistory Then
+                Array.Sort(fiArray, Function(x, y) StringComparer.OrdinalIgnoreCase.Compare(x.CreationTime, y.CreationTime))
+                For i = 0 To fiArray.GetUpperBound(0) - CFG.MaxHistory
+                    Try
+                        fiArray(i).Delete()
+                    Catch ex As Exception
+                        Log(LogLvl.Warning, "Can't delete file in history", ex)
+                    End Try
+                Next
+            End If
+
+            'Get new next image
+            Dim dl = Task.Run(Async Function() As Task
+                                  NextImage = Await Downloader.GetRandomImageAsync()
+                              End Function)
+
+
+            'Process next image
+            'ToDo: manipulate image -> fill empty areas?
+
+
+            dl.Wait()
+        Finally
+            _isStillProcessing = False
+        End Try
+
+    End Sub
+
+    Private Function GetNextMonitor() As Integer
+        Dim count = Desktop.Monitors.Count
+        If count = 0 Then Return -1 'If dict is empty
+        If count = 1 Then 'If dict has only one item
+            Dim firstKey = Desktop.Monitors.First().Key
+            If Desktop.IsDesktopVisible(firstKey) Then
+                _lastMonitor = firstKey
+                Return firstKey
+            Else
+                Return -1
+            End If
+        End If
+        Dim currLowestKey = Desktop.Monitors.First().Key
+        Dim currHighestKey = Desktop.Monitors.Last().Key
+        'In case _lastKey is not in range anymore
+        If _lastMonitor < currLowestKey OrElse
+        _lastMonitor > currHighestKey Then _lastMonitor = currHighestKey
+        Dim i = _lastMonitor 'Starting point
+        Do
+            'Increment iterator
+            If i >= currHighestKey Then
+                'Go to lowest if end is reached
+                i = currLowestKey
+            Else
+                i += 1
+            End If
+
+            If Not Desktop.Monitors.ContainsKey(i) Then
+                'If _lastKey is reached again, but not in dict
+                If i = _lastMonitor Then Return -1
+
+                Continue Do
+            End If
+
+            If Desktop.IsDesktopVisible(i) Then
+                _lastMonitor = i
+                Return i
+            End If
+
+            'Checked everything if lastKey is reached again
+            If i = _lastMonitor Then Return -1
+        Loop
+    End Function
+
+End Module
