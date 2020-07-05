@@ -11,7 +11,8 @@ Module Program
 
     Public PATH_EXE As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
     Public DIR_EXE As String = IO.Path.GetDirectoryName(PATH_EXE) & "\"
-    Private PATH_CONFIG As String = DIR_EXE & "config.json"
+    Public DIR_CONFIG As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppName)
+    Public PATH_CONFIG As String = Path.Combine(DIR_CONFIG, "config.json")
 
     Sub Main(args As String())
         ' Update app path

@@ -11,6 +11,7 @@ Module Logger 'Static
 
     Private _fileLogger As SimpleFileLogger
     Private _triedInit As Boolean 'Only try once
+    Private PATH_LOG As String = Path.Combine(DIR_CONFIG, "log.txt")
 
     Public Enum LogLvl
         Trace
@@ -25,8 +26,8 @@ Module Logger 'Static
         If Not FileLogDisabled AndAlso Not _triedInit AndAlso _fileLogger Is Nothing Then
             _triedInit = True
             Try
-                _fileLogger = New SimpleFileLogger(DIR_EXE & "/log.txt")
-                _fileLogger.WriteLog("Check https://github.com/KoB-Kirito for updates")
+                _fileLogger = New SimpleFileLogger(PATH_LOG)
+                _fileLogger.WriteLog("Check https://github.com/KoB-Kirito/Jiraisho/releases for updates")
             Catch fEx As Exception
                 MessageBox.Show("Can't create log-file" & vbCrLf & fEx.ToString(), AppName & " - " & "Error")
             End Try
