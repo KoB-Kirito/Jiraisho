@@ -9,13 +9,11 @@ Module Program
 
     Public CFG As Config
 
-    Public PATH_EXE As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
-    Public DIR_EXE As String = IO.Path.GetDirectoryName(PATH_EXE) & "\"
     Public DIR_CONFIG As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppName)
-    Public PATH_CONFIG As String = Path.Combine(DIR_CONFIG, "config.json")
+    Private PATH_CONFIG As String = Path.Combine(DIR_CONFIG, ".\config.json")
 
     Sub Main(args As String())
-        ' Update app path
+        ' Registers app path to enable direct calls
         Registry.UpdateAppPath()
 
         ' Catches context calls, parses arguments, sets global loglevel
@@ -160,6 +158,8 @@ Module Program
     Private Sub ProcessExit(sender As Object, e As EventArgs)
         Dim json = JsonConvert.SerializeObject(CFG, Formatting.Indented)
         Try
+            Dim fi = New System.IO.FileInfo(PATH_CONFIG)
+            fi.Directory.Create()
             File.WriteAllText(PATH_CONFIG, json, New UTF8Encoding(False))
         Catch ex As Exception
             Log(LogLvl.Warning, "Could not save config", ex)
@@ -176,8 +176,8 @@ Module Program
             .Rating = Rating.Safe,
             .IntervalInSeconds = 30,
             .Style = Style.Fit,
-            .DirHistory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName, "History"),
-            .DirSaved = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName, "Saved"),
+            .DirHistory = Path.Combine(Path.GetTempPath(), AppName, "History"),
+            .DirSaved = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName),
             .MaxHistory = 10,
             .HK_SaveCurrent = (HK_Modifier.MOD_ALT, Keys.S),
             .HK_OpenCurrent = (HK_Modifier.MOD_ALT, Keys.O),
@@ -188,6 +188,8 @@ Module Program
             CFG = defaultConfig
             Dim json = JsonConvert.SerializeObject(CFG, Formatting.Indented)
             Try
+                Dim fi = New System.IO.FileInfo(PATH_CONFIG)
+                fi.Directory.Create()
                 File.WriteAllText(PATH_CONFIG, json, New UTF8Encoding(False))
             Catch ex As Exception
                 Log(LogLvl.Warning, "Can't write config file", ex)
@@ -199,6 +201,8 @@ Module Program
             Catch ex As Exception
                 CFG = defaultConfig
                 Dim json = JsonConvert.SerializeObject(CFG, Formatting.Indented)
+                Dim fi = New System.IO.FileInfo(PATH_CONFIG)
+                fi.Directory.Create()
                 File.WriteAllText(PATH_CONFIG, json, New UTF8Encoding(False))
                 Log(LogLvl.Error, "Can't load config. Config file reset to defaults.", ex)
             End Try

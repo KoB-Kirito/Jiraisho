@@ -1,14 +1,15 @@
 ﻿Public Class Registry
-    Private Shared path As String = "Software\" & AppName
+    Private Shared PATH_EXE As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
+    Private Shared mainKey As String = "Software\" & AppName
 
     Public Shared Sub SetValue(name As String, value As Object, Optional valueKind As Microsoft.Win32.RegistryValueKind = Microsoft.Win32.RegistryValueKind.String)
-        Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(path)
+        Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey)
         key.SetValue(name, value, valueKind)
         key.Flush()
     End Sub
 
     Public Shared Function GetValue(name As String) As Object
-        Dim key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(path, False)
+        Dim key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(mainKey, False)
         If key Is Nothing Then
             Return Nothing
         Else

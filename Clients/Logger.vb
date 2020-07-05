@@ -26,6 +26,8 @@ Module Logger 'Static
         If Not FileLogDisabled AndAlso Not _triedInit AndAlso _fileLogger Is Nothing Then
             _triedInit = True
             Try
+                Dim fi = New System.IO.FileInfo(PATH_LOG)
+                fi.Directory.Create()
                 _fileLogger = New SimpleFileLogger(PATH_LOG)
                 _fileLogger.WriteLog("Check https://github.com/KoB-Kirito/Jiraisho/releases for updates")
             Catch fEx As Exception
