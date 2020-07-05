@@ -1,4 +1,6 @@
-﻿Public Class Registry
+﻿Imports Newtonsoft.Json
+
+Public Class Registry
     Private Shared PATH_EXE As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
     Private Shared mainKey As String = "Software\" & AppName
 
@@ -68,7 +70,7 @@
         Try
             Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(ccmKey)
         Catch ex As Exception
-            Log(LogLvl.Warning, "Could not delete cascaded context menu", ex)
+            Log(LogLvl.Warning, "Could not delete cascaded context menu: " & ex.Message)
         End Try
     End Sub
 
@@ -112,10 +114,17 @@
             Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(ccmKey & "-save")
             Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(ccmKey & "-open")
         Catch ex As Exception
-            Log(LogLvl.Warning, "Could not delete normal context menu", ex)
+            Log(LogLvl.Warning, "Could not delete normal context menu: " & ex.Message)
         End Try
     End Sub
 
 #End Region
 
 End Class
+
+<JsonConverter(GetType(Converters.StringEnumConverter))>
+Public Enum ContextMenuType As Integer
+    None = 0
+    Normal = 1
+    Cascaded = 2
+End Enum

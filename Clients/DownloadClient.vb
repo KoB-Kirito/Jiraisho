@@ -147,25 +147,26 @@ Class DownloadClient
         Log(LogLvl.Debug, "Search: " & String.Join(" ", tags))
 
         Dim result As BooruSharp.Search.Post.SearchResult
-        Dim mostLikelyNextMonitor = GetNextAvailableMonitor()
+        Dim mostLikelyNextMonitor = GetNextAvailableMonitor(DontAlterLastMonitor:=True)
         If mostLikelyNextMonitor < 0 Then
             mostLikelyNextMonitor = Windows.Forms.Screen.PrimaryScreen.DeviceName.Substring(11)
         End If
         Dim nextMon = Desktop.Monitors(mostLikelyNextMonitor)
-        Dim ratioOfNextMonitor = nextMon.Rect.Width / nextMon.Rect.Height
-        Dim resolutionV = nextMon.Rect.Width * nextMon.Rect.Height
+        Dim ratioOfNextMonitor = nextMon.Rectangle.Width / nextMon.Rectangle.Height
+        Dim resolutionV = nextMon.Rectangle.Width * nextMon.Rectangle.Height
 
         Try
             Await _asyncLock.WaitAsync()
             Dim tries As Integer
             Do
                 tries += 1
-                If tries >= 10 Then
+                If tries >= 20 Then
                     Log(LogLvl.Warning, "Max tries reached")
                     Return Nothing
                 End If
 
                 'Get result
+                Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({String.Join(" ", tags)})")
                 result = Await _currentSource.GetRandomImageAsync(tags.ToArray())
 
                 'Checks
@@ -179,7 +180,7 @@ Class DownloadClient
                     Log(LogLvl.Debug, "ratioOfNextMonitor: " & ratioOfNextMonitor)
                     Dim ratioOfPost = result.width / result.height
                     Log(LogLvl.Debug, "ratioOfPost: " & ratioOfPost)
-                    If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.1) Then
+                    If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.2) Then
                         Log(LogLvl.Debug, $"Ratio is not okay ({Math.Abs(ratioOfNextMonitor - ratioOfPost)}) allowDeviation: {CFG.AllowSmallDeviations}")
                         Continue Do
                     Else

@@ -51,7 +51,7 @@ Module Program
 
     Private Sub ParseArgs(args As String())
 #Region "Context Menu Catch"
-        If args IsNot Nothing AndAlso args.Length > 0 AndAlso (String.Compare(args(0), "cmt", StringComparison.InvariantCultureIgnoreCase) OrElse args(0).Contains("cmt")) Then
+        If args IsNot Nothing AndAlso args.Length > 0 AndAlso args(0).Contains("cmt") Then
             Try
                 FileLogDisabled = True
 
@@ -112,13 +112,17 @@ Module Program
         End If
 #End Region
 
+        'Ensure to exit if the app is already running
+        If System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1 Then
+            MessageBox.Show("App is already running!", AppName)
+            Environment.Exit(0)
+        End If
+
 #If DEBUG Then
         'Always log everything while debugging
         GlobalLogLevel = LogLvl.Trace
 #Else
         If args IsNot Nothing AndAlso args.Length > 0 Then
-            Log(LogLvl.Trace, "Called")
-
             'First arg = loglevel, enables logging
             If Not String.IsNullOrWhiteSpace(args(0)) Then
                 Select Case args(0).Trim().ToLowerInvariant()
@@ -176,12 +180,14 @@ Module Program
             .Rating = Rating.Safe,
             .IntervalInSeconds = 30,
             .Style = Style.Fit,
+            .SkipObscuredMonitors = True,
             .DirHistory = Path.Combine(Path.GetTempPath(), AppName, "History"),
             .DirSaved = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName),
             .MaxHistory = 10,
             .HK_SaveCurrent = (HK_Modifier.MOD_ALT, Keys.S),
             .HK_OpenCurrent = (HK_Modifier.MOD_ALT, Keys.O),
-            .SettingsWindowDefaultPosition = New Drawing.Point(256, 256)
+            .ContextMenu = ContextMenuType.Cascaded,
+            .SettingsWindowDefaultPosition = New Drawing.Point(256, 256) 'ToDo: Store this in registry
         }
 
         If Not File.Exists(PATH_CONFIG) Then
@@ -241,12 +247,30 @@ Module Program
         If modi < HK_Modifier.MOD_ALT OrElse modi > HK_Modifier.MOD_CONTROL_SHIFT OrElse modi = HK_Modifier.MOD_WIN OrElse modi = HK_Modifier.MOD_NOREPEAT Then
             CFG.HK_OpenCurrent = defaultConfig.HK_OpenCurrent
         End If
+        If CFG.ContextMenu < ContextMenuType.None OrElse CFG.ContextMenu > ContextMenuType.Cascaded Then
+            CFG.ContextMenu = defaultConfig.ContextMenu
+        End If
         If CFG.SettingsWindowDefaultPosition.X < 0 OrElse CFG.SettingsWindowDefaultPosition.Y < 0 Then
             CFG.SettingsWindowDefaultPosition = defaultConfig.SettingsWindowDefaultPosition
         End If
 
         'Update registry
         Registry.SetValue("DirSaved", CFG.DirSaved)
+        Select Case CFG.ContextMenu
+            Case ContextMenuType.None
+                Registry.DeleteContextMenu()
+                Registry.DeleteCascadedContextMenu()
+
+            Case ContextMenuType.Normal
+                Registry.DeleteCascadedContextMenu()
+                Registry.CreateContextMenu()
+
+            Case ContextMenuType.Cascaded
+                Registry.DeleteContextMenu()
+                Registry.CreateCascadedContextMenu()
+
+        End Select
+
 
         Log(LogLvl.Trace, "Reached end")
     End Sub
@@ -287,16 +311,16 @@ Module Program
     Public Sub StartProcessingLoop()
         Log(LogLvl.Trace, "Called")
 
-        SlideshowTimer = New Timers.Timer
-        AddHandler SlideshowTimer.Elapsed, AddressOf ProcessingLoop.ProcessingLoop
-        SlideshowTimer.Interval = CFG.IntervalInSeconds * 1000
-        SlideshowTimer.AutoReset = True
-        SlideshowTimer.Enabled = True
-
         'Run once at start to get first image
         ProcessingLoop.ProcessingLoop(Nothing, Nothing)
 
-        Log(LogLvl.Debug, $"Diashow interval set to {CFG.IntervalInSeconds} seconds")
+        SlideshowTimer = New Timers.Timer
+        AddHandler SlideshowTimer.Elapsed, AddressOf ProcessingLoop.ProcessingLoop
+        SlideshowTimer.Interval = 5000 'Set interval gets set after first wallpaper change
+        SlideshowTimer.AutoReset = True
+        SlideshowTimer.Start()
+
+        Log(LogLvl.Debug, $"Diashow timer started")
     End Sub
 
     Sub StartUI()
@@ -330,18 +354,22 @@ Module Program
         'Wallpaper
         <JsonProperty(Order:=10)> Public IntervalInSeconds As Integer
         <JsonProperty(Order:=11)> Public Style As Style
+        <JsonProperty(Order:=12)> Public SkipObscuredMonitors As Boolean
 
         'Files
-        <JsonProperty(Order:=12)> Public DirHistory As String
-        <JsonProperty(Order:=13)> Public DirSaved As String
-        <JsonProperty(Order:=14)> Public MaxHistory As Integer
+        <JsonProperty(Order:=13)> Public DirHistory As String
+        <JsonProperty(Order:=14)> Public DirSaved As String
+        <JsonProperty(Order:=15)> Public MaxHistory As Integer
 
         'Hotkeys
-        <JsonProperty(Order:=15)> Public HK_SaveCurrent As (HK_Modifier, Keys)
-        <JsonProperty(Order:=16)> Public HK_OpenCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=16)> Public HK_SaveCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=17)> Public HK_OpenCurrent As (HK_Modifier, Keys)
+
+        'ContextMenu
+        <JsonProperty(Order:=18)> Public ContextMenu As ContextMenuType
 
         'Misc
-        <JsonProperty(Order:=17)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
+        <JsonProperty(Order:=19)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
 
         Public Function Clone() As Config
             Return Me.MemberwiseClone()

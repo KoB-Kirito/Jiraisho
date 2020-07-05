@@ -39,6 +39,7 @@ Public Class Settings
 
         'Output
         txbx_slideshow_interval.Text = CFG.IntervalInSeconds
+        chbx_skip_obscured.Checked = CFG.SkipObscuredMonitors
         'ToDo: Style
 
         'Files
@@ -165,6 +166,8 @@ Public Class Settings
             tab_output.Text = "Output*"
         End If
 
+        'Skip obscured
+        tempCFG.SkipObscuredMonitors = chbx_skip_obscured.Checked
 
 #End Region
 

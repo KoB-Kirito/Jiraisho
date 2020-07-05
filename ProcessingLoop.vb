@@ -24,10 +24,17 @@ Module ProcessingLoop
             If NextImage IsNot Nothing Then
                 'Get next available monitor
                 Dim nextMonitor = GetNextAvailableMonitor()
+                Log(LogLvl.Debug, "Next monitor: " & nextMonitor)
 
                 'Skip if no monitor is available
                 If nextMonitor = -1 Then
                     Log(LogLvl.Warning, "No monitor was available for output")
+
+                    'Check every 5 seconds if no monitor was available
+                    SlideshowTimer.Stop()
+                    SlideshowTimer.Interval = 5000
+                    SlideshowTimer.Start()
+
                     Return
                 End If
 
@@ -59,6 +66,11 @@ Module ProcessingLoop
                 Registry.SetValue(currMonitorName & "-postUrl", CurrImages(nextMonitor).PostUrl.AbsoluteUri)
                 Registry.SetValue(currMonitorName & "-fileUrl", CurrImages(nextMonitor).FileUrl.AbsoluteUri)
                 Registry.SetValue(currMonitorName & "-filePath", CurrImages(nextMonitor).Filepath)
+
+                'Reset timer on success
+                SlideshowTimer.Stop()
+                SlideshowTimer.Interval = CFG.IntervalInSeconds * 1000
+                SlideshowTimer.Start()
             End If
 
             'Delete everything but the last 10 'ToDo: Configurable?
@@ -92,8 +104,9 @@ Module ProcessingLoop
 
     End Sub
 
-    Public Function GetNextAvailableMonitor() As Integer
+    Public Function GetNextAvailableMonitor(Optional DontAlterLastMonitor As Boolean = False) As Integer
         Dim count = Desktop.Monitors.Count
+        Log(LogLvl.Debug, "Monitors.Count: " & count)
         If count = 0 Then Return -1 'If dict is empty
         If count = 1 Then 'If dict has only one item
             Dim firstKey = Desktop.Monitors.First().Key
@@ -106,10 +119,11 @@ Module ProcessingLoop
         End If
         Dim currLowestKey = Desktop.Monitors.First().Key
         Dim currHighestKey = Desktop.Monitors.Last().Key
-        'In case _lastKey is not in range anymore
+        'In case _lastMonitor is not in range anymore
         If _lastMonitor < currLowestKey OrElse
         _lastMonitor > currHighestKey Then _lastMonitor = currHighestKey
         Dim i = _lastMonitor 'Starting point
+        Log(LogLvl.Debug, $"Start={i} currLowest={currLowestKey} currHighest={currHighestKey}")
         Do
             'Increment iterator
             If i >= currHighestKey Then
@@ -126,8 +140,9 @@ Module ProcessingLoop
                 Continue Do
             End If
 
+            Log(LogLvl.Debug, "Checking " & i)
             If Desktop.IsDesktopVisible(i) Then
-                _lastMonitor = i
+                If Not DontAlterLastMonitor Then _lastMonitor = i
                 Return i
             End If
 

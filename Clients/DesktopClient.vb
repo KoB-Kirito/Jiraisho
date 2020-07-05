@@ -107,13 +107,13 @@ Public Class DesktopClient
                 newMonitor.DeviceId = currMonitor.DeviceID
 
                 ' Get resolution
-                Dim rect As Rectangle = Nothing
+                Dim rect As User32.RECT = Nothing
                 Dim hr = _desktopWallpaper.GetMonitorRECT(currMonitor.DeviceID, rect)
                 If hr <> HRESULT.S_OK Then
                     Log(LogLvl.Warning, $"Can't get resolution of monitor {newMonitor.DeviceName}. Result was {hr.ToString()}", Source:="New DesktopClient")
                     Continue While
                 End If
-                newMonitor.Rect = rect
+                newMonitor.Rectangle = User32.ToRectangle(rect)
 
                 Monitors.Add(id, newMonitor)
                 Log(LogLvl.Debug, "New monitor added: " & newMonitor.ToString(), Source:="New DesktopClient")
@@ -171,11 +171,16 @@ Public Class DesktopClient
     Public Function IsDesktopVisible(DeviceName As String) As Boolean
         Log(LogLvl.Trace, "Called with " & DeviceName)
 
+        'If feature disabled
+        If CFG.SkipObscuredMonitors = False Then
+            Log(LogLvl.Debug, "Feature is disabled")
+            Return True
+        End If
 
         'Iterate all windows
         'Log(LogLvl.Debug, "Iterating all windows...")
 
-        'Exlude these
+        'Exlude workspace windows
         Dim shellWindow = User32.GetShellWindow()
         Dim desktopWindow = User32.GetDesktopWindow()
         'Log(LogLvl.Debug, "Desktop = " & desktopWindow.ToInt64() & ", Shell = " & shellWindow.ToInt64())
@@ -248,7 +253,7 @@ Public Class DesktopClient
             'subtract all windows from the desktop
             Dim remaining = workingArea.Subtract(windowRects)
 
-            If GlobalLogLevel <= LogLvl.Debug Then Utils.SaveScreenshotWithRectangles("remaining.bmp", windowRects, remaining)
+            If GlobalLogLevel <= LogLvl.Debug Then Utils.SaveScreenshotWithRectangles(DIR_CONFIG & "\remaining.bmp", windowRects, remaining)
 
             'Get accumulated volume of the remaining area
             Dim remainingV As Integer
@@ -288,14 +293,14 @@ End Class
 Public Class Monitor
     Public DeviceName As String ' \\.\DISPLAY1
     Public DeviceId As String   ' \\?\DISPLAY#GSM76FE#5&3b13964d&0&UID4354#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
-    Public Rect As Rectangle
+    Public Rectangle As Rectangle
 
     Public Sub New(DeviceName As String)
         Me.DeviceName = DeviceName
     End Sub
 
     Public Overrides Function ToString() As String
-        Return $"DeviceName={{{If(Me.DeviceName, "Nothing")}}} DeviceId={{{If(Me.DeviceId, "Nothing")}}} Rect={{{If(Me.Rect.ToString(), "Nothing")}}}"
+        Return $"DeviceName={{{If(Me.DeviceName, "Nothing")}}} DeviceId={{{If(Me.DeviceId, "Nothing")}}} Rect={{{If(Me.Rectangle.ToString(), "Nothing")}}}"
     End Function
 End Class
 

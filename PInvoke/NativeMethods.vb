@@ -91,7 +91,7 @@ Namespace NativeMethod
 
 
         <StructLayout(LayoutKind.Sequential)>
-        Private Structure RECT
+        Public Structure RECT
             Public left As Integer
             Public top As Integer
             Public right As Integer
@@ -104,7 +104,7 @@ Namespace NativeMethod
                 Me.bottom = bottom
             End Sub
         End Structure
-        Private Shared Function ToRectangle(rect As RECT) As Rectangle
+        Public Shared Function ToRectangle(rect As RECT) As Rectangle
             Return New Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top)
         End Function
 

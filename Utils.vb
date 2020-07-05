@@ -123,7 +123,7 @@ Public Module Extensions
             'Debug
             If GlobalLogLevel <= LogLvl.Trace Then
                 count += 1
-                Utils.SaveScreenshotWithRectangles($"{count}_subtract.bmp", {sRect}, output)
+                Utils.SaveScreenshotWithRectangles(DIR_CONFIG & $"\{count}_subtract.bmp", {sRect}, output)
             End If
         Next
 

@@ -89,6 +89,7 @@ Partial Class Settings
         Me.Label21 = New System.Windows.Forms.Label()
         Me.FolderBrowserDialog_history = New System.Windows.Forms.FolderBrowserDialog()
         Me.FolderBrowserDialog_saved = New System.Windows.Forms.FolderBrowserDialog()
+        Me.chbx_skip_obscured = New System.Windows.Forms.CheckBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.tab_general.SuspendLayout()
@@ -464,6 +465,7 @@ Partial Class Settings
         'tab_output
         '
         Me.tab_output.BackColor = System.Drawing.SystemColors.Control
+        Me.tab_output.Controls.Add(Me.chbx_skip_obscured)
         Me.tab_output.Controls.Add(Me.txbx_slideshow_interval)
         Me.tab_output.Controls.Add(Me.Label13)
         Me.tab_output.Controls.Add(Me.Label14)
@@ -649,10 +651,13 @@ Partial Class Settings
         '
         'txbx_hk_open_key
         '
+        Me.txbx_hk_open_key.Enabled = False
         Me.txbx_hk_open_key.Location = New System.Drawing.Point(118, 38)
         Me.txbx_hk_open_key.Name = "txbx_hk_open_key"
         Me.txbx_hk_open_key.Size = New System.Drawing.Size(52, 23)
         Me.txbx_hk_open_key.TabIndex = 2
+        Me.txbx_hk_open_key.Text = "O"
+        Me.txbx_hk_open_key.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'Label24
         '
@@ -666,11 +671,14 @@ Partial Class Settings
         'cobo_hk_open_modifier
         '
         Me.cobo_hk_open_modifier.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
+        Me.cobo_hk_open_modifier.Enabled = False
         Me.cobo_hk_open_modifier.FormattingEnabled = True
+        Me.cobo_hk_open_modifier.Items.AddRange(New Object() {"Alt"})
         Me.cobo_hk_open_modifier.Location = New System.Drawing.Point(17, 38)
         Me.cobo_hk_open_modifier.Name = "cobo_hk_open_modifier"
         Me.cobo_hk_open_modifier.Size = New System.Drawing.Size(74, 23)
         Me.cobo_hk_open_modifier.TabIndex = 0
+        Me.cobo_hk_open_modifier.Text = "Alt"
         '
         'Label25
         '
@@ -706,10 +714,13 @@ Partial Class Settings
         '
         'txbx_hk_save_key
         '
+        Me.txbx_hk_save_key.Enabled = False
         Me.txbx_hk_save_key.Location = New System.Drawing.Point(118, 38)
         Me.txbx_hk_save_key.Name = "txbx_hk_save_key"
         Me.txbx_hk_save_key.Size = New System.Drawing.Size(52, 23)
         Me.txbx_hk_save_key.TabIndex = 2
+        Me.txbx_hk_save_key.Text = "S"
+        Me.txbx_hk_save_key.TextAlign = System.Windows.Forms.HorizontalAlignment.Right
         '
         'Label23
         '
@@ -723,11 +734,14 @@ Partial Class Settings
         'cobo_hk_save_modifier
         '
         Me.cobo_hk_save_modifier.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
+        Me.cobo_hk_save_modifier.Enabled = False
         Me.cobo_hk_save_modifier.FormattingEnabled = True
+        Me.cobo_hk_save_modifier.Items.AddRange(New Object() {"Alt"})
         Me.cobo_hk_save_modifier.Location = New System.Drawing.Point(17, 38)
         Me.cobo_hk_save_modifier.Name = "cobo_hk_save_modifier"
         Me.cobo_hk_save_modifier.Size = New System.Drawing.Size(74, 23)
         Me.cobo_hk_save_modifier.TabIndex = 0
+        Me.cobo_hk_save_modifier.Text = "Alt"
         '
         'Label22
         '
@@ -746,6 +760,18 @@ Partial Class Settings
         Me.Label21.Size = New System.Drawing.Size(52, 15)
         Me.Label21.TabIndex = 1
         Me.Label21.Text = "Modifier"
+        '
+        'chbx_skip_obscured
+        '
+        Me.chbx_skip_obscured.AutoSize = True
+        Me.chbx_skip_obscured.Checked = True
+        Me.chbx_skip_obscured.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chbx_skip_obscured.Location = New System.Drawing.Point(24, 105)
+        Me.chbx_skip_obscured.Name = "chbx_skip_obscured"
+        Me.chbx_skip_obscured.Size = New System.Drawing.Size(156, 19)
+        Me.chbx_skip_obscured.TabIndex = 6
+        Me.chbx_skip_obscured.Text = "Skip monitor if obscured"
+        Me.chbx_skip_obscured.UseVisualStyleBackColor = True
         '
         'Settings
         '
@@ -856,4 +882,5 @@ Partial Class Settings
     Friend WithEvents txbx_hk_open_key As Windows.Forms.TextBox
     Friend WithEvents Label26 As Windows.Forms.Label
     Friend WithEvents chbo_context_menu_cascaded As Windows.Forms.CheckBox
+    Friend WithEvents chbx_skip_obscured As Windows.Forms.CheckBox
 End Class

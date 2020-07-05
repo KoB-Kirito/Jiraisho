@@ -42,7 +42,18 @@ Module Logger 'Static
         End If
         If LogLvl >= LogLvl.Error Then
             If SlideshowTimer IsNot Nothing Then SlideshowTimer.Stop()
-            MessageBox.Show($"{Message}{If(ex IsNot Nothing, vbCrLf & "(" & ex.Message & ")", "")}{If(LogLvl = LogLvl.Critical, vbCrLf & "Critical error, closing...", "")}", AppName & " - " & LogLvl.ToString())
+            'Create a dummy window to be able to set icon and bring the error to top
+            Using msgBoxWindow = New Form With {
+                .Icon = System.Drawing.SystemIcons.Error,
+                .TopMost = True,
+                .FormBorderStyle = System.Windows.Forms.FormBorderStyle.None,
+                .Size = New System.Drawing.Size(0, 0),
+                .BackColor = Drawing.Color.Magenta,
+                .TransparencyKey = Drawing.Color.Magenta
+            }
+                msgBoxWindow.Show()
+                MessageBox.Show(msgBoxWindow, $"{Message}{If(ex IsNot Nothing, vbCrLf & "(" & ex.Message & ")", "")}{If(LogLvl = LogLvl.Critical, vbCrLf & "Critical error, closing...", "")}", AppName & " - " & LogLvl.ToString())
+            End Using
             If LogLvl = LogLvl.Critical Then Environment.Exit(0)
             If SlideshowTimer IsNot Nothing Then SlideshowTimer.Start()
         End If

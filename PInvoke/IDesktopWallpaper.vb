@@ -21,7 +21,7 @@ Namespace NativeMethod
         Function GetMonitorDevicePathCount(ByRef count As UInteger) As HRESULT
 
         Function GetMonitorRECT(<MarshalAs(UnmanagedType.LPWStr)> ByVal monitorID As String,
-                                <MarshalAs(UnmanagedType.Struct)> ByRef displayRect As Rectangle) As HRESULT
+                                <MarshalAs(UnmanagedType.Struct)> ByRef displayRect As User32.RECT) As HRESULT
 
         Function SetBackgroundColor(ByVal color As UInteger) As HRESULT
 
