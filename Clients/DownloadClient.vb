@@ -147,23 +147,57 @@ Class DownloadClient
         Log(LogLvl.Debug, "Search: " & String.Join(" ", tags))
 
         Dim result As BooruSharp.Search.Post.SearchResult
+        Dim mostLikelyNextMonitor = GetNextAvailableMonitor()
+        If mostLikelyNextMonitor < 0 Then
+            mostLikelyNextMonitor = Windows.Forms.Screen.PrimaryScreen.DeviceName.Substring(11)
+        End If
+        Dim nextMon = Desktop.Monitors(mostLikelyNextMonitor)
+        Dim ratioOfNextMonitor = nextMon.Rect.Width / nextMon.Rect.Height
+        Dim resolutionV = nextMon.Rect.Width * nextMon.Rect.Height
+
         Try
             Await _asyncLock.WaitAsync()
-            Dim resultOk As Boolean
             Dim tries As Integer
             Do
                 tries += 1
-                resultOk = True
+                If tries >= 10 Then
+                    Log(LogLvl.Warning, "Max tries reached")
+                    Return Nothing
+                End If
 
+                'Get result
                 result = Await _currentSource.GetRandomImageAsync(tags.ToArray())
 
                 'Checks
+                'Is image
                 If Not result.fileUrl.LocalPath.IsImage Then
                     Log(LogLvl.Warning, $"IsImage-Check failed. LocalPath: {result.fileUrl.LocalPath}")
-                    resultOk = False
+                    Continue Do
                 End If
-                'ToDo: Implement score limitations etc
-            Loop Until resultOk OrElse tries >= 100
+                'Is desktop resolution
+                If CFG.OnlyDesktopRatio Then
+                    Log(LogLvl.Debug, "ratioOfNextMonitor: " & ratioOfNextMonitor)
+                    Dim ratioOfPost = result.width / result.height
+                    Log(LogLvl.Debug, "ratioOfPost: " & ratioOfPost)
+                    If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.1) Then
+                        Log(LogLvl.Debug, $"Ratio is not okay ({Math.Abs(ratioOfNextMonitor - ratioOfPost)}) allowDeviation: {CFG.AllowSmallDeviations}")
+                        Continue Do
+                    Else
+                        Log(LogLvl.Info, "Ratio is OK!")
+                    End If
+                End If
+                'Min resolution
+                If CFG.MinResolution > 0 Then
+                    Dim rResolutionV = result.width * result.height
+                    If rResolutionV < resolutionV * CFG.MinResolution Then
+                        Log(LogLvl.Warning, $"Resolution is lower than minimum ({rResolutionV} < {resolutionV} [{CFG.MinResolution}])")
+                        Continue Do
+                    End If
+                End If
+
+                'Everything was ok
+                Exit Do
+            Loop
             Log(LogLvl.Debug, "Success. Tries: " & tries)
         Catch ex As Exception
             Log(LogLvl.Error, CFG.Source & " replied: " & ex.Message)

@@ -47,12 +47,21 @@ Public Class Settings
         txbx_max_history.Text = CFG.MaxHistory
 
         'Hotkeys
-        'ToDo: Hier weiter
-
-        Dim key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\Classes\DesktopBackground\shell\Jiraisho")
+        'Check cascaded
+        Dim key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\Classes\DesktopBackground\shell\" & AppName, False)
         If key IsNot Nothing Then
             'If key is present, the context menu is currently enabled
             chbo_desktop_context_menu.Checked = True
+            chbo_context_menu_cascaded.Checked = True
+        Else
+            'Check normal
+            key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\Classes\DesktopBackground\shell\" & AppName & "-fav", False)
+            If key IsNot Nothing Then
+                chbo_desktop_context_menu.Checked = True
+            Else
+                'No context menu is enabled -> Disable sub setting
+                chbo_context_menu_cascaded.Enabled = False
+            End If
         End If
 
         ' Replaced with current user version
@@ -83,7 +92,8 @@ Public Class Settings
 
 #Region "General"
 
-
+        tempCFG.StartWithWindows = chbo_start_with_windows.Checked
+        tempCFG.CheckForUpdates = chbo_check_for_updates.Checked
 
 #End Region
 
@@ -94,9 +104,24 @@ Public Class Settings
             tempCFG.Source = cobo_source.SelectedItem
         End If
 
+        'Login
+        tempCFG.Username = txbx_username.Text
+        tempCFG.Password = txbx_password.Text
+
 #End Region
 
 #Region "Search"
+        'Rating
+        Dim ratingValue As Integer
+        If chbx_rating_safe.Checked Then ratingValue += Rating.Safe
+        If chbx_rating_questionable.Checked Then ratingValue += Rating.Questionable
+        If chbx_rating_explicit.Checked Then ratingValue += Rating.Explicit
+        If ratingValue = 0 Then
+            everythingIsOk = False
+            Log(LogLvl.Error, "At least one rating must be selected")
+        Else
+            tempCFG.Rating = ratingValue
+        End If
 
         'Custom Tags
         If Not String.IsNullOrWhiteSpace(txbx_custom_tags.Text) Then
@@ -105,6 +130,13 @@ Public Class Settings
         Else
             tempCFG.CustomTags = Nothing
         End If
+
+        'Only desktop ratio
+        tempCFG.OnlyDesktopRatio = chbx_only_desktop_ratio.Checked
+        tempCFG.AllowSmallDeviations = chbx_allow_small_deviations.Checked
+
+        'Minimum resolution
+        tempCFG.MinResolution = trba_min_resolution.Value * 0.1
 
 #End Region
 
@@ -138,7 +170,8 @@ Public Class Settings
 
 #Region "Hotkeys"
 
-
+        'ToDo: Implement
+        'https://stackoverflow.com/questions/906899/binding-an-enum-to-a-winforms-combo-box-and-then-setting-it/9541156
 
 #End Region
 
@@ -176,39 +209,26 @@ Public Class Settings
                 Downloader.SetCurrentSource(tempCFG.Source)
             End If
 
-            'Registry
+            'Context menu
             If chbo_desktop_context_menu.Checked Then
-                Try
-                    Dim mainKey = "Software\Classes\DesktopBackground\Shell\Jiraisho"
-                    Dim exePath = IO.Path.ChangeExtension(Application.ExecutablePath, "exe")
-
-                    'Main SubKey
-                    Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey)
-                    'Enable sub entries
-                    key.SetValue("SubCommands", "", Microsoft.Win32.RegistryValueKind.String)
-
-                    'Add current
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\add")
-                    key.SetValue("MUIVerb", "Add current to favourites", Microsoft.Win32.RegistryValueKind.String)
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\add\command")
-                    key.SetValue("", $"""{exePath}"" ""-cmt"" ""-add""")
-
-                    'Save current
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\save")
-                    key.SetValue("MUIVerb", "Save current to disk", Microsoft.Win32.RegistryValueKind.String)
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\save\command")
-                    key.SetValue("", $"""{exePath}"" ""-cmt"" ""-save""")
-
-                    'Open current
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\open")
-                    key.SetValue("MUIVerb", "Open current in browser", Microsoft.Win32.RegistryValueKind.String)
-                    key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(mainKey & "\Shell\open\command")
-                    key.SetValue("", $"""{exePath}"" ""-cmt"" ""-open""")
-
-                Catch ex As Exception
-                    Log(LogLvl.Error, "Can't access the registry to add context menu to desktop")
-                End Try
+                If chbo_context_menu_cascaded.Checked Then
+                    Registry.DeleteContextMenu()
+                    Registry.CreateCascadedContextMenu()
+                Else
+                    Registry.DeleteCascadedContextMenu()
+                    Registry.CreateContextMenu()
+                End If
+            Else
+                Registry.DeleteContextMenu()
+                Registry.DeleteCascadedContextMenu()
             End If
+
+            'SavedDir
+            Registry.SetValue("DirSaved", tempCFG.DirSaved)
+
+            'Hotkeys
+            HotkeyListenerWindow.UpdateHotkey(Hotkey.SaveCurrentImage, tempCFG.HK_SaveCurrent.Item1, tempCFG.HK_SaveCurrent.Item2)
+            HotkeyListenerWindow.UpdateHotkey(Hotkey.OpenCurrentImage, tempCFG.HK_OpenCurrent.Item1, tempCFG.HK_OpenCurrent.Item2)
 
             'Save config
             CFG = tempCFG
@@ -283,6 +303,15 @@ Public Class Settings
         Dim res = FolderBrowserDialog_saved.ShowDialog()
         If res = DialogResult.OK Then
             txbx_dir_saved.Text = FolderBrowserDialog_saved.SelectedPath
+        End If
+    End Sub
+
+    Private Sub chbo_desktop_context_menu_CheckedChanged(sender As Object, e As EventArgs) Handles chbo_desktop_context_menu.CheckedChanged
+        'Only enable sub setting if main setting is checked
+        If chbo_desktop_context_menu.Checked Then
+            chbo_context_menu_cascaded.Enabled = True
+        Else
+            chbo_context_menu_cascaded.Enabled = False
         End If
     End Sub
 End Class

@@ -25,7 +25,7 @@ Module Logger 'Static
         If Not FileLogDisabled AndAlso Not _triedInit AndAlso _fileLogger Is Nothing Then
             _triedInit = True
             Try
-                _fileLogger = New SimpleFileLogger("log.txt")
+                _fileLogger = New SimpleFileLogger(DIR_EXE & "/log.txt")
                 _fileLogger.WriteLog("Check https://github.com/KoB-Kirito for updates")
             Catch fEx As Exception
                 MessageBox.Show("Can't create log-file" & vbCrLf & fEx.ToString(), AppName & " - " & "Error")

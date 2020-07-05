@@ -7,40 +7,17 @@ Public Class HotkeyListenerWindow
 
     Public Event HotkeyPressed(Hotkey As Hotkey)
 
-    Private ReadOnly RegisteredHotkeys As List(Of Integer) = New List(Of Integer)
-
     Private Const WM_HOTKEY As Integer = &H312
     Private Const WM_DESTROY As Integer = &H2
 
     Public Sub New()
         Me.CreateHandle(New CreateParams())
+        SharedHandle = Me.Handle
         AddHandler Application.ApplicationExit, AddressOf Application_ApplicationExit
 
         'Init Hotkeys
         UpdateHotkey(Hotkey.SaveCurrentImage, CFG.HK_SaveCurrent.Item1, CFG.HK_SaveCurrent.Item2)
         UpdateHotkey(Hotkey.OpenCurrentImage, CFG.HK_OpenCurrent.Item1, CFG.HK_OpenCurrent.Item2)
-    End Sub
-
-    Public Sub UpdateHotkey(Hotkey As Hotkey, Modifier As HK_Modifier, vlc As Keys)
-        Try
-            If RegisteredHotkeys.Contains(Hotkey) Then
-                If User32.UnregisterHotKey(Me.Handle, Hotkey) Then
-                    RegisteredHotkeys.Remove(Hotkey)
-                Else
-                    Log(LogLvl.Error, "Failed to unregister hotkey")
-                    Return
-                End If
-            End If
-
-            If User32.RegisterHotKey(Me.Handle, Hotkey, Modifier + HK_Modifier.MOD_NOREPEAT, vlc) Then
-                RegisteredHotkeys.Add(Hotkey)
-                Log(LogLvl.Debug, "Hotkey registered")
-            Else
-                Log(LogLvl.Error, "Can't register hotkey")
-            End If
-        Catch ex As Exception
-            Log(LogLvl.Error, "Can't register hotkey", ex)
-        End Try
     End Sub
 
     Private Sub Application_ApplicationExit(ByVal sender As Object, ByVal e As EventArgs)
@@ -62,6 +39,58 @@ Public Class HotkeyListenerWindow
         MyBase.WndProc(m)
     End Sub
 
+#Region "Shared"
+    Public Shared SharedHandle As Object
+    Private Shared ReadOnly RegisteredHotkeys As List(Of Integer) = New List(Of Integer)
+
+    Public Shared Sub UpdateHotkey(Hotkey As Hotkey, Modifier As HK_Modifier, vlc As Keys)
+        Try
+            If RegisteredHotkeys.Contains(Hotkey) Then
+                If User32.UnregisterHotKey(SharedHandle, Hotkey) Then
+                    RegisteredHotkeys.Remove(Hotkey)
+                Else
+                    Log(LogLvl.Error, "Failed to unregister hotkey")
+                    Return
+                End If
+            End If
+
+            If User32.RegisterHotKey(SharedHandle, Hotkey, Modifier + HK_Modifier.MOD_NOREPEAT, vlc) Then
+                RegisteredHotkeys.Add(Hotkey)
+                Log(LogLvl.Debug, "Hotkey registered")
+            Else
+                Log(LogLvl.Error, "Can't register hotkey")
+            End If
+        Catch ex As Exception
+            Log(LogLvl.Error, "Can't register hotkey", ex)
+        End Try
+    End Sub
+
+    Public Shared Function ModifierToKeys(modifier As HK_Modifier) As Keys
+        Select Case modifier
+            Case HK_Modifier.MOD_ALT
+                Return Keys.Alt
+
+            Case HK_Modifier.MOD_CONTROL
+                Return Keys.Control
+
+            Case HK_Modifier.MOD_CONTROL_ALT
+                Return Keys.Control Or Keys.Alt
+
+            Case HK_Modifier.MOD_CONTROL_SHIFT
+                Return Keys.Control Or Keys.Shift
+
+            Case HK_Modifier.MOD_SHIFT
+                Return Keys.Shift
+
+            Case HK_Modifier.MOD_SHIFT_ALT
+                Return Keys.Shift Or Keys.Alt
+
+            Case Else
+                Return Nothing
+        End Select
+    End Function
+
+#End Region
 End Class
 
 Public Enum Hotkey As Integer

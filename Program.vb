@@ -9,9 +9,14 @@ Module Program
 
     Public CFG As Config
 
-    Private Const PATH_CONFIG As String = "config.json"
+    Public PATH_EXE As String = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName
+    Public DIR_EXE As String = IO.Path.GetDirectoryName(PATH_EXE) & "\"
+    Private PATH_CONFIG As String = DIR_EXE & "config.json"
 
     Sub Main(args As String())
+        ' Update app path
+        Registry.UpdateAppPath()
+
         ' Catches context calls, parses arguments, sets global loglevel
         ParseArgs(args)
 
@@ -19,10 +24,6 @@ Module Program
         AddHandler AppDomain.CurrentDomain.ProcessExit, AddressOf ProcessExit
 
         ' First call of Log() initializes the logger
-        ' App-Name ideas:
-        ' AutoSlideShow
-        ' Jido Suraido Shō
-        ' Jiraisho
         Log(LogLvl.Info, "Jiraisho v0.1")
         Log(LogLvl.Debug, $"IsHardwareAccelerated = {Numerics.Vector.IsHardwareAccelerated}")
 
@@ -51,17 +52,64 @@ Module Program
 
     Private Sub ParseArgs(args As String())
 #Region "Context Menu Catch"
-        If args IsNot Nothing AndAlso args.Length > 0 AndAlso args(0) = "cmt" Then
-            FileLogDisabled = True
-            Log(LogLvl.Error, "Test")
+        If args IsNot Nothing AndAlso args.Length > 0 AndAlso (String.Compare(args(0), "cmt", StringComparison.InvariantCultureIgnoreCase) OrElse args(0).Contains("cmt")) Then
+            Try
+                FileLogDisabled = True
 
-            'Debug
-            IO.File.WriteAllText("test.txt", "Test: " & String.Join(";", args))
+                'Get current screen
+                Dim currScreen = Screen.FromPoint(Cursor.Position)
 
-            'ToDo: Add registry
+                Select Case args(1)
+                    Case "fav"
+                    'ToDo: implement
 
+                    Case "save"
+                        Dim dirSaved = Registry.GetValue("DirSaved")
+                        If dirSaved Is Nothing Then
+                            Log(LogLvl.Error, "Can't parse directory for saved images")
+                            Exit Select
+                        End If
+                        Dim path = Registry.GetValue(currScreen.DeviceName & "-filePath")
+                        If path IsNot Nothing Then
+                            If IO.File.Exists(path) Then
+                                Try
+                                    File.Copy(path, IO.Path.Combine(dirSaved, IO.Path.GetFileName(path)), True)
+                                Catch ex As Exception
+                                    Log(LogLvl.Error, "Can't copy file", ex)
+                                End Try
+                            Else
+                                Log(LogLvl.Error, "No file found at " & path)
+                            End If
+                        Else
+                            Log(LogLvl.Error, "No path found for " & currScreen.DeviceName)
+                        End If
 
-            Environment.Exit(0)
+                    Case "open"
+                        Dim url = Registry.GetValue(currScreen.DeviceName & "-postUrl")
+                        If String.IsNullOrWhiteSpace(url) Then url = Registry.GetValue(currScreen.DeviceName & "-fileUrl")
+                        If String.IsNullOrWhiteSpace(url) Then
+                            Log(LogLvl.Error, "Can't get url for " & currScreen.DeviceName)
+                            Exit Select
+                        End If
+                        Try
+                            System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.AppStarting
+                            System.Diagnostics.Process.Start("explorer.exe", url)
+                        Catch ex As Exception
+                            Log(LogLvl.Error, "Can't open browser", ex)
+                        Finally
+                            System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default
+                        End Try
+
+                    Case Else
+                        Log(LogLvl.Error, "Can't process " & args(1))
+
+                End Select
+            Catch ex As Exception
+                MessageBox.Show(ex.ToString(), AppName & " - Error")
+            Finally
+                'Always exit on context menu calls
+                Environment.Exit(0)
+            End Try
         End If
 #End Region
 
@@ -70,6 +118,7 @@ Module Program
         GlobalLogLevel = LogLvl.Trace
 #Else
         If args IsNot Nothing AndAlso args.Length > 0 Then
+            Log(LogLvl.Trace, "Called")
 
             'First arg = loglevel, enables logging
             If Not String.IsNullOrWhiteSpace(args(0)) Then
@@ -103,10 +152,6 @@ Module Program
             'Disable file-logging by default
             GlobalLogLevel = LogLvl.Error
             FileLogDisabled = True
-
-            'ToDo: Really disable log for puplish
-            GlobalLogLevel = LogLvl.Trace
-            FileLogDisabled = False
         End If
 #End If
     End Sub
@@ -194,6 +239,9 @@ Module Program
         If CFG.SettingsWindowDefaultPosition.X < 0 OrElse CFG.SettingsWindowDefaultPosition.Y < 0 Then
             CFG.SettingsWindowDefaultPosition = defaultConfig.SettingsWindowDefaultPosition
         End If
+
+        'Update registry
+        Registry.SetValue("DirSaved", CFG.DirSaved)
 
         Log(LogLvl.Trace, "Reached end")
     End Sub

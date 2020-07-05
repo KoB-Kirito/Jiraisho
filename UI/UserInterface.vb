@@ -27,13 +27,13 @@ Public Class UserInterface
         contextMenu.ShowImageMargin = False
 
         'Save current image
-        contextMenu.Items.Add(New ToolStripMenuItem("Save current image", Nothing, New EventHandler(AddressOf SaveCurrentImage), Keys.Alt Or Keys.S)) 'ToDo: parse keys from config
+        'contextMenu.Items.Add(New ToolStripMenuItem("Save current image", Nothing, New EventHandler(AddressOf SaveCurrentImage), HotkeyListenerWindow.ModifierToKeys(CFG.HK_SaveCurrent.Item1) Or CFG.HK_SaveCurrent.Item2))
 
         'Open current image
-        contextMenu.Items.Add(New ToolStripMenuItem("Open current image", Nothing, New EventHandler(AddressOf OpenCurrentImage), Keys.Alt Or Keys.O)) 'ToDo: parse keys from config
+        'contextMenu.Items.Add(New ToolStripMenuItem("Open current image", Nothing, New EventHandler(AddressOf OpenCurrentImage), HotkeyListenerWindow.ModifierToKeys(CFG.HK_OpenCurrent.Item1) Or CFG.HK_OpenCurrent.Item2))
 
         '-----------------
-        contextMenu.Items.Add(New ToolStripSeparator)
+        'contextMenu.Items.Add(New ToolStripSeparator)
 
         'Interval
         dropdownInterval = New ToolStripMenuItem("Interval")

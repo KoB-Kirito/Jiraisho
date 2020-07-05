@@ -32,14 +32,14 @@ Partial Class Settings
         Me.Label2 = New System.Windows.Forms.Label()
         Me.chbo_start_with_windows = New System.Windows.Forms.CheckBox()
         Me.tab_source = New System.Windows.Forms.TabPage()
+        Me.txbx_password = New System.Windows.Forms.TextBox()
+        Me.txbx_username = New System.Windows.Forms.TextBox()
         Me.bt_check_login = New System.Windows.Forms.Button()
         Me.Label9 = New System.Windows.Forms.Label()
         Me.Label8 = New System.Windows.Forms.Label()
         Me.Label7 = New System.Windows.Forms.Label()
         Me.Label6 = New System.Windows.Forms.Label()
         Me.Label5 = New System.Windows.Forms.Label()
-        Me.txbx_password = New System.Windows.Forms.TextBox()
-        Me.txbx_username = New System.Windows.Forms.TextBox()
         Me.cobo_source = New System.Windows.Forms.ComboBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
@@ -58,34 +58,34 @@ Partial Class Settings
         Me.chbx_rating_questionable = New System.Windows.Forms.CheckBox()
         Me.chbx_rating_safe = New System.Windows.Forms.CheckBox()
         Me.tab_output = New System.Windows.Forms.TabPage()
+        Me.txbx_slideshow_interval = New System.Windows.Forms.TextBox()
         Me.Label13 = New System.Windows.Forms.Label()
         Me.Label14 = New System.Windows.Forms.Label()
         Me.Label12 = New System.Windows.Forms.Label()
         Me.Label11 = New System.Windows.Forms.Label()
-        Me.txbx_slideshow_interval = New System.Windows.Forms.TextBox()
         Me.tab_files = New System.Windows.Forms.TabPage()
-        Me.Label20 = New System.Windows.Forms.Label()
         Me.txbx_max_history = New System.Windows.Forms.TextBox()
+        Me.txbx_dir_history = New System.Windows.Forms.TextBox()
+        Me.Label20 = New System.Windows.Forms.Label()
         Me.bt_dir_saved = New System.Windows.Forms.Button()
         Me.bt_dir_history = New System.Windows.Forms.Button()
         Me.txbx_dir_saved = New System.Windows.Forms.TextBox()
         Me.Label19 = New System.Windows.Forms.Label()
         Me.Label18 = New System.Windows.Forms.Label()
-        Me.txbx_dir_history = New System.Windows.Forms.TextBox()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.lb_desktop_context_info = New System.Windows.Forms.Label()
+        Me.chbo_context_menu_cascaded = New System.Windows.Forms.CheckBox()
         Me.chbo_desktop_context_menu = New System.Windows.Forms.CheckBox()
         Me.GroupBox3 = New System.Windows.Forms.GroupBox()
+        Me.txbx_hk_open_key = New System.Windows.Forms.TextBox()
         Me.Label24 = New System.Windows.Forms.Label()
-        Me.ComboBox2 = New System.Windows.Forms.ComboBox()
+        Me.cobo_hk_open_modifier = New System.Windows.Forms.ComboBox()
         Me.Label25 = New System.Windows.Forms.Label()
-        Me.TextBox2 = New System.Windows.Forms.TextBox()
         Me.Label26 = New System.Windows.Forms.Label()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
+        Me.txbx_hk_save_key = New System.Windows.Forms.TextBox()
         Me.Label23 = New System.Windows.Forms.Label()
-        Me.ComboBox1 = New System.Windows.Forms.ComboBox()
+        Me.cobo_hk_save_modifier = New System.Windows.Forms.ComboBox()
         Me.Label22 = New System.Windows.Forms.Label()
-        Me.TextBox1 = New System.Windows.Forms.TextBox()
         Me.Label21 = New System.Windows.Forms.Label()
         Me.FolderBrowserDialog_history = New System.Windows.Forms.FolderBrowserDialog()
         Me.FolderBrowserDialog_saved = New System.Windows.Forms.FolderBrowserDialog()
@@ -208,14 +208,14 @@ Partial Class Settings
         'tab_source
         '
         Me.tab_source.BackColor = System.Drawing.SystemColors.Control
+        Me.tab_source.Controls.Add(Me.txbx_password)
+        Me.tab_source.Controls.Add(Me.txbx_username)
         Me.tab_source.Controls.Add(Me.bt_check_login)
         Me.tab_source.Controls.Add(Me.Label9)
         Me.tab_source.Controls.Add(Me.Label8)
         Me.tab_source.Controls.Add(Me.Label7)
         Me.tab_source.Controls.Add(Me.Label6)
         Me.tab_source.Controls.Add(Me.Label5)
-        Me.tab_source.Controls.Add(Me.txbx_password)
-        Me.tab_source.Controls.Add(Me.txbx_username)
         Me.tab_source.Controls.Add(Me.cobo_source)
         Me.tab_source.Controls.Add(Me.Label4)
         Me.tab_source.Controls.Add(Me.Label3)
@@ -225,6 +225,20 @@ Partial Class Settings
         Me.tab_source.Size = New System.Drawing.Size(499, 296)
         Me.tab_source.TabIndex = 1
         Me.tab_source.Text = "Source"
+        '
+        'txbx_password
+        '
+        Me.txbx_password.Location = New System.Drawing.Point(160, 92)
+        Me.txbx_password.Name = "txbx_password"
+        Me.txbx_password.Size = New System.Drawing.Size(120, 23)
+        Me.txbx_password.TabIndex = 4
+        '
+        'txbx_username
+        '
+        Me.txbx_username.Location = New System.Drawing.Point(24, 92)
+        Me.txbx_username.Name = "txbx_username"
+        Me.txbx_username.Size = New System.Drawing.Size(120, 23)
+        Me.txbx_username.TabIndex = 4
         '
         'bt_check_login
         '
@@ -280,20 +294,6 @@ Partial Class Settings
         Me.Label5.Size = New System.Drawing.Size(60, 15)
         Me.Label5.TabIndex = 4
         Me.Label5.Text = "Username"
-        '
-        'txbx_password
-        '
-        Me.txbx_password.Location = New System.Drawing.Point(160, 92)
-        Me.txbx_password.Name = "txbx_password"
-        Me.txbx_password.Size = New System.Drawing.Size(120, 23)
-        Me.txbx_password.TabIndex = 4
-        '
-        'txbx_username
-        '
-        Me.txbx_username.Location = New System.Drawing.Point(24, 92)
-        Me.txbx_username.Name = "txbx_username"
-        Me.txbx_username.Size = New System.Drawing.Size(120, 23)
-        Me.txbx_username.TabIndex = 4
         '
         'cobo_source
         '
@@ -369,7 +369,6 @@ Partial Class Settings
         'trba_min_resolution
         '
         Me.trba_min_resolution.Location = New System.Drawing.Point(287, 38)
-        Me.trba_min_resolution.Maximum = 5
         Me.trba_min_resolution.Name = "trba_min_resolution"
         Me.trba_min_resolution.Size = New System.Drawing.Size(143, 45)
         Me.trba_min_resolution.TabIndex = 7
@@ -465,16 +464,23 @@ Partial Class Settings
         'tab_output
         '
         Me.tab_output.BackColor = System.Drawing.SystemColors.Control
+        Me.tab_output.Controls.Add(Me.txbx_slideshow_interval)
         Me.tab_output.Controls.Add(Me.Label13)
         Me.tab_output.Controls.Add(Me.Label14)
         Me.tab_output.Controls.Add(Me.Label12)
         Me.tab_output.Controls.Add(Me.Label11)
-        Me.tab_output.Controls.Add(Me.txbx_slideshow_interval)
         Me.tab_output.Location = New System.Drawing.Point(4, 24)
         Me.tab_output.Name = "tab_output"
         Me.tab_output.Size = New System.Drawing.Size(499, 296)
         Me.tab_output.TabIndex = 3
         Me.tab_output.Text = "Output"
+        '
+        'txbx_slideshow_interval
+        '
+        Me.txbx_slideshow_interval.Location = New System.Drawing.Point(24, 48)
+        Me.txbx_slideshow_interval.Name = "txbx_slideshow_interval"
+        Me.txbx_slideshow_interval.Size = New System.Drawing.Size(37, 23)
+        Me.txbx_slideshow_interval.TabIndex = 5
         '
         'Label13
         '
@@ -511,29 +517,36 @@ Partial Class Settings
         Me.Label11.TabIndex = 4
         Me.Label11.Text = "Interval:"
         '
-        'txbx_slideshow_interval
-        '
-        Me.txbx_slideshow_interval.Location = New System.Drawing.Point(24, 48)
-        Me.txbx_slideshow_interval.Name = "txbx_slideshow_interval"
-        Me.txbx_slideshow_interval.Size = New System.Drawing.Size(37, 23)
-        Me.txbx_slideshow_interval.TabIndex = 5
-        '
         'tab_files
         '
         Me.tab_files.BackColor = System.Drawing.SystemColors.Control
-        Me.tab_files.Controls.Add(Me.Label20)
         Me.tab_files.Controls.Add(Me.txbx_max_history)
+        Me.tab_files.Controls.Add(Me.txbx_dir_history)
+        Me.tab_files.Controls.Add(Me.Label20)
         Me.tab_files.Controls.Add(Me.bt_dir_saved)
         Me.tab_files.Controls.Add(Me.bt_dir_history)
         Me.tab_files.Controls.Add(Me.txbx_dir_saved)
         Me.tab_files.Controls.Add(Me.Label19)
         Me.tab_files.Controls.Add(Me.Label18)
-        Me.tab_files.Controls.Add(Me.txbx_dir_history)
         Me.tab_files.Location = New System.Drawing.Point(4, 24)
         Me.tab_files.Name = "tab_files"
         Me.tab_files.Size = New System.Drawing.Size(499, 296)
         Me.tab_files.TabIndex = 4
         Me.tab_files.Text = "Files"
+        '
+        'txbx_max_history
+        '
+        Me.txbx_max_history.Location = New System.Drawing.Point(8, 159)
+        Me.txbx_max_history.Name = "txbx_max_history"
+        Me.txbx_max_history.Size = New System.Drawing.Size(33, 23)
+        Me.txbx_max_history.TabIndex = 6
+        '
+        'txbx_dir_history
+        '
+        Me.txbx_dir_history.Location = New System.Drawing.Point(8, 31)
+        Me.txbx_dir_history.Name = "txbx_dir_history"
+        Me.txbx_dir_history.Size = New System.Drawing.Size(324, 23)
+        Me.txbx_dir_history.TabIndex = 0
         '
         'Label20
         '
@@ -543,13 +556,6 @@ Partial Class Settings
         Me.Label20.Size = New System.Drawing.Size(69, 15)
         Me.Label20.TabIndex = 7
         Me.Label20.Text = "Max history"
-        '
-        'txbx_max_history
-        '
-        Me.txbx_max_history.Location = New System.Drawing.Point(8, 159)
-        Me.txbx_max_history.Name = "txbx_max_history"
-        Me.txbx_max_history.Size = New System.Drawing.Size(33, 23)
-        Me.txbx_max_history.TabIndex = 6
         '
         'bt_dir_saved
         '
@@ -594,17 +600,10 @@ Partial Class Settings
         Me.Label18.TabIndex = 1
         Me.Label18.Text = "History"
         '
-        'txbx_dir_history
-        '
-        Me.txbx_dir_history.Location = New System.Drawing.Point(8, 31)
-        Me.txbx_dir_history.Name = "txbx_dir_history"
-        Me.txbx_dir_history.Size = New System.Drawing.Size(324, 23)
-        Me.txbx_dir_history.TabIndex = 0
-        '
         'TabPage1
         '
         Me.TabPage1.BackColor = System.Drawing.SystemColors.Control
-        Me.TabPage1.Controls.Add(Me.lb_desktop_context_info)
+        Me.TabPage1.Controls.Add(Me.chbo_context_menu_cascaded)
         Me.TabPage1.Controls.Add(Me.chbo_desktop_context_menu)
         Me.TabPage1.Controls.Add(Me.GroupBox3)
         Me.TabPage1.Controls.Add(Me.GroupBox2)
@@ -614,15 +613,15 @@ Partial Class Settings
         Me.TabPage1.TabIndex = 5
         Me.TabPage1.Text = "Hotkeys"
         '
-        'lb_desktop_context_info
+        'chbo_context_menu_cascaded
         '
-        Me.lb_desktop_context_info.AutoSize = True
-        Me.lb_desktop_context_info.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point)
-        Me.lb_desktop_context_info.Location = New System.Drawing.Point(25, 266)
-        Me.lb_desktop_context_info.Name = "lb_desktop_context_info"
-        Me.lb_desktop_context_info.Size = New System.Drawing.Size(117, 15)
-        Me.lb_desktop_context_info.TabIndex = 6
-        Me.lb_desktop_context_info.Text = "Admin rights needed"
+        Me.chbo_context_menu_cascaded.AutoSize = True
+        Me.chbo_context_menu_cascaded.Location = New System.Drawing.Point(49, 269)
+        Me.chbo_context_menu_cascaded.Name = "chbo_context_menu_cascaded"
+        Me.chbo_context_menu_cascaded.Size = New System.Drawing.Size(156, 19)
+        Me.chbo_context_menu_cascaded.TabIndex = 7
+        Me.chbo_context_menu_cascaded.Text = "Cascaded Context Menu"
+        Me.chbo_context_menu_cascaded.UseVisualStyleBackColor = True
         '
         'chbo_desktop_context_menu
         '
@@ -636,10 +635,10 @@ Partial Class Settings
         '
         'GroupBox3
         '
+        Me.GroupBox3.Controls.Add(Me.txbx_hk_open_key)
         Me.GroupBox3.Controls.Add(Me.Label24)
-        Me.GroupBox3.Controls.Add(Me.ComboBox2)
+        Me.GroupBox3.Controls.Add(Me.cobo_hk_open_modifier)
         Me.GroupBox3.Controls.Add(Me.Label25)
-        Me.GroupBox3.Controls.Add(Me.TextBox2)
         Me.GroupBox3.Controls.Add(Me.Label26)
         Me.GroupBox3.Location = New System.Drawing.Point(214, 3)
         Me.GroupBox3.Name = "GroupBox3"
@@ -647,6 +646,13 @@ Partial Class Settings
         Me.GroupBox3.TabIndex = 4
         Me.GroupBox3.TabStop = False
         Me.GroupBox3.Text = "Open Current Image"
+        '
+        'txbx_hk_open_key
+        '
+        Me.txbx_hk_open_key.Location = New System.Drawing.Point(118, 38)
+        Me.txbx_hk_open_key.Name = "txbx_hk_open_key"
+        Me.txbx_hk_open_key.Size = New System.Drawing.Size(52, 23)
+        Me.txbx_hk_open_key.TabIndex = 2
         '
         'Label24
         '
@@ -657,14 +663,14 @@ Partial Class Settings
         Me.Label24.TabIndex = 4
         Me.Label24.Text = "+"
         '
-        'ComboBox2
+        'cobo_hk_open_modifier
         '
-        Me.ComboBox2.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
-        Me.ComboBox2.FormattingEnabled = True
-        Me.ComboBox2.Location = New System.Drawing.Point(17, 38)
-        Me.ComboBox2.Name = "ComboBox2"
-        Me.ComboBox2.Size = New System.Drawing.Size(74, 23)
-        Me.ComboBox2.TabIndex = 0
+        Me.cobo_hk_open_modifier.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
+        Me.cobo_hk_open_modifier.FormattingEnabled = True
+        Me.cobo_hk_open_modifier.Location = New System.Drawing.Point(17, 38)
+        Me.cobo_hk_open_modifier.Name = "cobo_hk_open_modifier"
+        Me.cobo_hk_open_modifier.Size = New System.Drawing.Size(74, 23)
+        Me.cobo_hk_open_modifier.TabIndex = 0
         '
         'Label25
         '
@@ -674,13 +680,6 @@ Partial Class Settings
         Me.Label25.Size = New System.Drawing.Size(26, 15)
         Me.Label25.TabIndex = 3
         Me.Label25.Text = "Key"
-        '
-        'TextBox2
-        '
-        Me.TextBox2.Location = New System.Drawing.Point(118, 38)
-        Me.TextBox2.Name = "TextBox2"
-        Me.TextBox2.Size = New System.Drawing.Size(52, 23)
-        Me.TextBox2.TabIndex = 2
         '
         'Label26
         '
@@ -693,10 +692,10 @@ Partial Class Settings
         '
         'GroupBox2
         '
+        Me.GroupBox2.Controls.Add(Me.txbx_hk_save_key)
         Me.GroupBox2.Controls.Add(Me.Label23)
-        Me.GroupBox2.Controls.Add(Me.ComboBox1)
+        Me.GroupBox2.Controls.Add(Me.cobo_hk_save_modifier)
         Me.GroupBox2.Controls.Add(Me.Label22)
-        Me.GroupBox2.Controls.Add(Me.TextBox1)
         Me.GroupBox2.Controls.Add(Me.Label21)
         Me.GroupBox2.Location = New System.Drawing.Point(8, 3)
         Me.GroupBox2.Name = "GroupBox2"
@@ -704,6 +703,13 @@ Partial Class Settings
         Me.GroupBox2.TabIndex = 4
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Save Current Image"
+        '
+        'txbx_hk_save_key
+        '
+        Me.txbx_hk_save_key.Location = New System.Drawing.Point(118, 38)
+        Me.txbx_hk_save_key.Name = "txbx_hk_save_key"
+        Me.txbx_hk_save_key.Size = New System.Drawing.Size(52, 23)
+        Me.txbx_hk_save_key.TabIndex = 2
         '
         'Label23
         '
@@ -714,14 +720,14 @@ Partial Class Settings
         Me.Label23.TabIndex = 4
         Me.Label23.Text = "+"
         '
-        'ComboBox1
+        'cobo_hk_save_modifier
         '
-        Me.ComboBox1.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
-        Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(17, 38)
-        Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(74, 23)
-        Me.ComboBox1.TabIndex = 0
+        Me.cobo_hk_save_modifier.AutoCompleteCustomSource.AddRange(New String() {"Ctrl", "Alt", "Shift"})
+        Me.cobo_hk_save_modifier.FormattingEnabled = True
+        Me.cobo_hk_save_modifier.Location = New System.Drawing.Point(17, 38)
+        Me.cobo_hk_save_modifier.Name = "cobo_hk_save_modifier"
+        Me.cobo_hk_save_modifier.Size = New System.Drawing.Size(74, 23)
+        Me.cobo_hk_save_modifier.TabIndex = 0
         '
         'Label22
         '
@@ -731,13 +737,6 @@ Partial Class Settings
         Me.Label22.Size = New System.Drawing.Size(26, 15)
         Me.Label22.TabIndex = 3
         Me.Label22.Text = "Key"
-        '
-        'TextBox1
-        '
-        Me.TextBox1.Location = New System.Drawing.Point(118, 38)
-        Me.TextBox1.Name = "TextBox1"
-        Me.TextBox1.Size = New System.Drawing.Size(52, 23)
-        Me.TextBox1.TabIndex = 2
         '
         'Label21
         '
@@ -844,17 +843,17 @@ Partial Class Settings
     Friend WithEvents FolderBrowserDialog_saved As Windows.Forms.FolderBrowserDialog
     Friend WithEvents TabPage1 As Windows.Forms.TabPage
     Friend WithEvents GroupBox2 As Windows.Forms.GroupBox
-    Friend WithEvents ComboBox1 As Windows.Forms.ComboBox
+    Friend WithEvents cobo_hk_save_modifier As Windows.Forms.ComboBox
     Friend WithEvents Label22 As Windows.Forms.Label
-    Friend WithEvents TextBox1 As Windows.Forms.TextBox
+    Friend WithEvents txbx_hk_save_key As Windows.Forms.TextBox
     Friend WithEvents Label21 As Windows.Forms.Label
     Friend WithEvents Label23 As Windows.Forms.Label
     Friend WithEvents chbo_desktop_context_menu As Windows.Forms.CheckBox
     Friend WithEvents GroupBox3 As Windows.Forms.GroupBox
     Friend WithEvents Label24 As Windows.Forms.Label
-    Friend WithEvents ComboBox2 As Windows.Forms.ComboBox
+    Friend WithEvents cobo_hk_open_modifier As Windows.Forms.ComboBox
     Friend WithEvents Label25 As Windows.Forms.Label
-    Friend WithEvents TextBox2 As Windows.Forms.TextBox
+    Friend WithEvents txbx_hk_open_key As Windows.Forms.TextBox
     Friend WithEvents Label26 As Windows.Forms.Label
-    Friend WithEvents lb_desktop_context_info As Windows.Forms.Label
+    Friend WithEvents chbo_context_menu_cascaded As Windows.Forms.CheckBox
 End Class

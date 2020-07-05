@@ -23,7 +23,7 @@ Module ProcessingLoop
             'Next image will be nothing on the first run
             If NextImage IsNot Nothing Then
                 'Get next available monitor
-                Dim nextMonitor = GetNextMonitor()
+                Dim nextMonitor = GetNextAvailableMonitor()
 
                 'Skip if no monitor is available
                 If nextMonitor = -1 Then
@@ -33,10 +33,15 @@ Module ProcessingLoop
 
                 'Save next image to history
                 Dim filePath = IO.Path.Combine(CFG.DirHistory, $"{NextImage.SourceBooru}_{NextImage.Id}{NextImage.Extension}")
-                Using fs = IO.File.OpenWrite(filePath)
-                    NextImage.Stream.CopyTo(fs)
-                End Using
-                NextImage.Stream.Dispose() 'Can be removed from memory now
+                Try
+                    Using fs = IO.File.OpenWrite(filePath)
+                        NextImage.Stream.CopyTo(fs)
+                    End Using
+                Catch ex As Exception
+                    Log(LogLvl.Warning, "Failed to copy filestream", ex)
+                Finally
+                    NextImage.Stream.Dispose() 'Can be removed from memory now
+                End Try
                 NextImage.Filepath = filePath
 
                 'Set next image wallpaper
@@ -48,6 +53,12 @@ Module ProcessingLoop
                 Else
                     CurrImages.Add(nextMonitor, NextImage)
                 End If
+
+                'Update registry
+                Dim currMonitorName = Desktop.Monitors(nextMonitor).DeviceName
+                Registry.SetValue(currMonitorName & "-postUrl", CurrImages(nextMonitor).PostUrl.AbsoluteUri)
+                Registry.SetValue(currMonitorName & "-fileUrl", CurrImages(nextMonitor).FileUrl.AbsoluteUri)
+                Registry.SetValue(currMonitorName & "-filePath", CurrImages(nextMonitor).Filepath)
             End If
 
             'Delete everything but the last 10 'ToDo: Configurable?
@@ -74,14 +85,14 @@ Module ProcessingLoop
             'ToDo: manipulate image -> fill empty areas?
 
 
-            dl.Wait()
+            dl.Wait(5000)
         Finally
             _isStillProcessing = False
         End Try
 
     End Sub
 
-    Private Function GetNextMonitor() As Integer
+    Public Function GetNextAvailableMonitor() As Integer
         Dim count = Desktop.Monitors.Count
         If count = 0 Then Return -1 'If dict is empty
         If count = 1 Then 'If dict has only one item
