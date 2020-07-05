@@ -248,7 +248,7 @@ Public Class DesktopClient
             'subtract all windows from the desktop
             Dim remaining = workingArea.Subtract(windowRects)
 
-            Utils.SaveScreenshotWithRectangles("remaining.bmp", windowRects, remaining)
+            If GlobalLogLevel <= LogLvl.Debug Then Utils.SaveScreenshotWithRectangles("remaining.bmp", windowRects, remaining)
 
             'Get accumulated volume of the remaining area
             Dim remainingV As Integer

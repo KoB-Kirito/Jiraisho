@@ -121,8 +121,10 @@ Public Module Extensions
             output.AddRange(temp)
 
             'Debug
-            count += 1
-            Utils.SaveScreenshotWithRectangles($"{count}_subtract.bmp", {sRect}, output)
+            If GlobalLogLevel <= LogLvl.Trace Then
+                count += 1
+                Utils.SaveScreenshotWithRectangles($"{count}_subtract.bmp", {sRect}, output)
+            End If
         Next
 
         Return output

@@ -3,6 +3,11 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+	<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+	<PublishTrimmed>True</PublishTrimmed>
+	<PublishReadyToRun>True</PublishReadyToRun>
+	<PublishReadyToRunShowWarnings>True</PublishReadyToRunShowWarnings>
+	<PublishSingleFile>True</PublishSingleFile>
 	<UseWindowsForms>true</UseWindowsForms>
     <StartupObject>Jiraisho.Program</StartupObject>
     <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
