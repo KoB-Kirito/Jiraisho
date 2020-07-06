@@ -134,8 +134,10 @@ Class DownloadClient
     End Function
 
     Public Async Function GetRandomImageAsync() As Task(Of MyImage)
+        'ToDo: Redo this spaghetti part...
         Log(LogLvl.Trace, "Called")
 
+        'Init tags, add rating if set, add custom tags from config
         Dim tags As New List(Of String)
         If CFG.Rating <> Rating.All Then tags.Add(ratingToString(CFG.Rating))
         If CFG.CustomTags IsNot Nothing Then
@@ -156,48 +158,65 @@ Class DownloadClient
         Dim resolutionV = nextMon.Rectangle.Width * nextMon.Rectangle.Height
 
         Try
-            Await _asyncLock.WaitAsync()
+            Await _asyncLock.WaitAsync() 'ToDo: Remove if bool on processing loop is sufficient
             Dim tries As Integer
+            'Retry loop
             Do
                 tries += 1
-                If tries >= 20 Then
+                If tries >= 10 Then
                     Log(LogLvl.Warning, "Max tries reached")
                     Return Nothing
                 End If
 
-                'Get result
-                Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({String.Join(" ", tags)})")
-                result = Await _currentSource.GetRandomImageAsync(tags.ToArray())
+                Dim results As BooruSharp.Search.Post.SearchResult()
+
+                If _currentSource.HaveMultipleRandomAPI Then
+                    Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {String.Join(" ", tags)})")
+                    results = Await _currentSource.GetRandomImagesAsync(100, tags.ToArray())
+                    Log(LogLvl.Debug, $"Got {results.Length} results")
+                Else
+                    'Just get one
+                    Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({String.Join(" ", tags)})")
+                    ReDim results(0)
+                    results(0) = Await _currentSource.GetRandomImageAsync(tags.ToArray())
+                    Log(LogLvl.Debug, $"Got one result")
+                End If
 
                 'Checks
-                'Is image
-                If Not result.fileUrl.LocalPath.IsImage Then
-                    Log(LogLvl.Warning, $"IsImage-Check failed. LocalPath: {result.fileUrl.LocalPath}")
-                    Continue Do
-                End If
-                'Is desktop resolution
-                If CFG.OnlyDesktopRatio Then
-                    Log(LogLvl.Debug, "ratioOfNextMonitor: " & ratioOfNextMonitor)
-                    Dim ratioOfPost = result.width / result.height
-                    Log(LogLvl.Debug, "ratioOfPost: " & ratioOfPost)
-                    If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.2) Then
-                        Log(LogLvl.Debug, $"Ratio is not okay ({Math.Abs(ratioOfNextMonitor - ratioOfPost)}) allowDeviation: {CFG.AllowSmallDeviations}")
-                        Continue Do
-                    Else
-                        Log(LogLvl.Info, "Ratio is OK!")
-                    End If
-                End If
-                'Min resolution
-                If CFG.MinResolution > 0 Then
-                    Dim rResolutionV = result.width * result.height
-                    If rResolutionV < resolutionV * CFG.MinResolution Then
-                        Log(LogLvl.Warning, $"Resolution is lower than minimum ({rResolutionV} < {resolutionV} [{CFG.MinResolution}])")
-                        Continue Do
-                    End If
-                End If
+                For Each res In results
+                    Log(LogLvl.Trace, $"Checking {res.id} [{res.width} x {res.height}px]({res.postUrl})")
 
-                'Everything was ok
-                Exit Do
+                    'Is image
+                    If Not res.fileUrl.LocalPath.IsImage Then
+                        Log(LogLvl.Warning, $"IsImage-Check failed. LocalPath: {res.fileUrl.LocalPath}")
+                        Continue For
+                    End If
+
+                    'Is desktop resolution
+                    If CFG.OnlyDesktopRatio Then
+                        Dim ratioOfPost = res.width / res.height                                                                                                    'ToDo: Make deviation customizable
+                        If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.2) Then
+                            Log(LogLvl.Debug, $"Ratio is not okay ({Math.Abs(ratioOfNextMonitor - ratioOfPost)}) allowDeviation: {CFG.AllowSmallDeviations}")
+                            Continue For
+                        Else
+                            Log(LogLvl.Info, "Ratio is OK!")
+                        End If
+                    End If
+                    'Min resolution
+                    If CFG.MinResolution > 0 Then
+                        Dim rResolutionV = res.width * res.height
+                        If rResolutionV < resolutionV * CFG.MinResolution Then
+                            Log(LogLvl.Warning, $"Resolution is lower than minimum ({rResolutionV} < {resolutionV} [{CFG.MinResolution}])")
+                            Continue For
+                        End If
+                    End If
+
+                    'Only reached if everything is okay
+                    'Just use the first one that satisfies all requirements
+                    Log(LogLvl.Info, $"Passed: {res.id} [{res.width} x {res.height}px]({res.postUrl})")
+                    result = res
+                    Exit Do 'Exit point for loop
+                Next
             Loop
             Log(LogLvl.Debug, "Success. Tries: " & tries)
         Catch ex As Exception
@@ -207,9 +226,6 @@ Class DownloadClient
         Finally
             _asyncLock.Release()
         End Try
-
-        'Debug
-        Log(LogLvl.Debug, $"Extension: {IO.Path.GetExtension(result.fileUrl.LocalPath)}{vbCrLf}File-Url: {result.fileUrl.AbsoluteUri}{vbCrLf}Post-Url: {result.postUrl.AbsoluteUri}")
 
         Dim stream = Await _httpClient.GetStreamAsync(result.fileUrl)
 

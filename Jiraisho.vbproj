@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BooruSharp" Version="2.3.1" />
+    <PackageReference Include="BooruSharp" Version="2.4.0" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0003" />
   </ItemGroup>
 
