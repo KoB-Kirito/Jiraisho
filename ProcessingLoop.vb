@@ -20,7 +20,6 @@ Module ProcessingLoop
         Try
             _isStillProcessing = True
 
-            'Next image will be nothing on the first run
             If NextImage IsNot Nothing Then
                 'Get next available monitor
                 Dim nextMonitor = GetNextAvailableMonitor()
@@ -97,7 +96,9 @@ Module ProcessingLoop
             'ToDo: manipulate image -> fill empty areas?
 
 
-            dl.Wait(5000)
+            If Not dl.Wait(SlideshowTimer.Interval - 1000) Then
+                Log(LogLvl.Warning, "Download did not finish in time")
+            End If
         Finally
             _isStillProcessing = False
         End Try

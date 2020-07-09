@@ -12,70 +12,6 @@ Public Class DesktopClient
     Private Shared _desktopWallpaperLock As New Object
 
     Public Sub New()
-        'DEBUG TEST
-        'ToDo: Remove
-
-        'User32.EnumDesktops ?
-        'https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enumdesktopsw
-
-        'Dim windowStationHandle = User32.GetProcessWindowStation()
-        'If windowStationHandle = IntPtr.Zero Then
-        '    Log(LogLvl.Warning, "WindowStationHandle is Nothing")
-        'End If
-
-        'Dim collection As New List(Of String)
-        'Dim dFilter As User32.EnumDesktopsDelegate = Function(ByVal desktop, ByVal lParam)
-        '                                                 Log(LogLvl.Debug, "Desktopname: " & desktop & " lParam: " & lParam.ToString())
-        '                                                 collection.Add(desktop)
-
-        '                                                 Return True
-        '                                             End Function
-
-        'Log(LogLvl.Debug, "Enumerating desktops")
-        'If Not User32.EnumDesktops(windowStationHandle, dFilter, IntPtr.Zero) Then
-        '    Log(LogLvl.Warning, "EnumDesktops failed")
-        'End If
-
-        'Log(LogLvl.Debug, "Trying to open desktop")
-        'For Each name In collection
-        '    Log(LogLvl.Trace, name)
-        '    Dim desktopHandle = User32.OpenDesktop(name, 0, True, AccessRight.DESKTOP_READOBJECTS)
-        '    If desktopHandle = IntPtr.Zero Then
-        '        Log(LogLvl.Warning, "desktopHandle is Nothing! Last error: " & Kernel32.GetLastError())
-        '    Else
-        '        'Try to enumerate windows on this desktop
-        '        Dim rCollection = New List(Of Rectangle)
-
-        '        Dim filter As User32.EnumDelegate = Function(ByVal hWnd, ByVal lParam) As Boolean
-        '                                                Dim rect As Rectangle
-        '                                                If User32.IsWindowVisible(hWnd) AndAlso User32.GetWindowRect(hWnd, rect) Then
-        '                                                    rCollection.Add(rect)
-        '                                                End If
-
-        '                                                Return True
-        '                                            End Function
-
-        '        If User32.EnumDesktopWindows(desktopHandle, filter, IntPtr.Zero) Then
-        '            Log(LogLvl.Debug, "EnumDesktopWindows returned true!")
-        '            For Each item In rCollection
-        '                Log(LogLvl.Debug, "Got a rectangle: " & item.ToString())
-        '                'ToDo: Check
-        '            Next
-        '            'ToDo: Get working area
-        '            'ToDo: Substract all windows from the working area
-        '            'ToDo: Check if remaining area is big enough to consider the desktop unobscured
-        '        Else
-        '            Log(LogLvl.Warning, "EnumDesktopWindows returned False")
-        '        End If
-        '    End If
-
-        '    'Try with native class
-
-        'Next
-
-
-        'DEBUG TEST
-
 
         Monitors = New SortedDictionary(Of Integer, Monitor)
 
@@ -183,7 +119,6 @@ Public Class DesktopClient
         'Exlude workspace windows
         Dim shellWindow = User32.GetShellWindow()
         Dim desktopWindow = User32.GetDesktopWindow()
-        'Log(LogLvl.Debug, "Desktop = " & desktopWindow.ToInt64() & ", Shell = " & shellWindow.ToInt64())
 
         'Get screen
         Dim sScreen As Screen = Nothing
@@ -221,7 +156,7 @@ Public Class DesktopClient
 
                                                        'Experimental additional checks
                                                        Dim style As WindowStyles = User32.GetWindowLong(hWnd, User32.GWL_STYLE)
-                                                       If style.HasFlag(WindowStyles.WS_POPUP) Then Return True
+                                                       If style.HasFlag(WindowStyles.WS_POPUP) Then Return True 'Popup-windows seem to be invisible most of the time or not important
                                                        Dim flagString = String.Join(" : ", style.GetFlags)
 
                                                        Dim rect As Rectangle
