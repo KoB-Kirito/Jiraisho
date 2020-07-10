@@ -18,6 +18,7 @@ Public Class HotkeyListenerWindow
         'Init Hotkeys
         UpdateHotkey(Hotkey.SaveCurrentImage, CFG.HK_SaveCurrent.Item1, CFG.HK_SaveCurrent.Item2)
         UpdateHotkey(Hotkey.OpenCurrentImage, CFG.HK_OpenCurrent.Item1, CFG.HK_OpenCurrent.Item2)
+        UpdateHotkey(Hotkey.FavCurrentImage, CFG.HK_FavCurrent.Item1, CFG.HK_FavCurrent.Item2)
     End Sub
 
     Private Sub Application_ApplicationExit(ByVal sender As Object, ByVal e As EventArgs)
@@ -96,6 +97,7 @@ End Class
 Public Enum Hotkey As Integer
     SaveCurrentImage = 1001
     OpenCurrentImage = 1002
+    FavCurrentImage = 1003
 End Enum
 
 <Flags>

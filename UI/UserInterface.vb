@@ -122,6 +122,9 @@ Public Class UserInterface
             Case Hotkey.OpenCurrentImage
                 OpenCurrentImage(Nothing, Nothing)
 
+            Case Hotkey.FavCurrentImage
+                FavCurrentImage(Nothing, Nothing)
+
             Case Else
                 Log(LogLvl.Warning, Hotkey & " pressed")
         End Select
@@ -179,6 +182,21 @@ Public Class UserInterface
             Finally
                 System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default
             End Try
+        Else
+            Log(LogLvl.Error, "Failed to get an image for screen " & activeScreen.DeviceName)
+        End If
+
+        Log(LogLvl.Trace, "Reached end")
+    End Sub
+
+    Private Async Sub FavCurrentImage(sender As Object, e As EventArgs)
+        Log(LogLvl.Trace, "Called")
+
+        'Get current screen, save wallpaper of that screen
+        Dim activeScreen = Screen.FromPoint(Cursor.Position)
+        Dim monitorId As Integer
+        If Integer.TryParse(activeScreen.DeviceName.Substring(11), monitorId) AndAlso CurrImages.ContainsKey(monitorId) Then
+            Await Downloader.AddFavouriteAsync(CurrImages(monitorId).Id)
         Else
             Log(LogLvl.Error, "Failed to get an image for screen " & activeScreen.DeviceName)
         End If

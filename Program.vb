@@ -186,6 +186,7 @@ Module Program
             .MaxHistory = 10,
             .HK_SaveCurrent = (HK_Modifier.MOD_ALT, Keys.S),
             .HK_OpenCurrent = (HK_Modifier.MOD_ALT, Keys.O),
+            .HK_FavCurrent = (HK_Modifier.MOD_ALT, Keys.F),
             .ContextMenu = ContextMenuType.Cascaded,
             .SettingsWindowDefaultPosition = New Drawing.Point(256, 256) 'ToDo: Store this in registry
         }
@@ -364,12 +365,13 @@ Module Program
         'Hotkeys
         <JsonProperty(Order:=16)> Public HK_SaveCurrent As (HK_Modifier, Keys)
         <JsonProperty(Order:=17)> Public HK_OpenCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=18)> Public HK_FavCurrent As (HK_Modifier, Keys)
 
         'ContextMenu
-        <JsonProperty(Order:=18)> Public ContextMenu As ContextMenuType
+        <JsonProperty(Order:=19)> Public ContextMenu As ContextMenuType
 
         'Misc
-        <JsonProperty(Order:=19)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
+        <JsonProperty(Order:=20)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
 
         Public Function Clone() As Config
             Return Me.MemberwiseClone()

@@ -92,7 +92,7 @@ Class DownloadClient
             End Select
 
             If _currentSource IsNot Nothing Then
-                _currentSource.SetHttpClient(_httpClient)
+                _currentSource.HttpClient = _httpClient
             End If
         Finally
             _asyncLock.Release()
@@ -170,7 +170,7 @@ Class DownloadClient
 
                 Dim results As BooruSharp.Search.Post.SearchResult()
 
-                If _currentSource.HaveMultipleRandomAPI Then
+                If _currentSource.HasMultipleRandomAPI() Then
                     Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {String.Join(" ", tags)})")
                     results = Await _currentSource.GetRandomImagesAsync(100, tags.ToArray())
                     Log(LogLvl.Debug, $"Got {results.Length} results")
@@ -230,6 +230,16 @@ Class DownloadClient
         Dim stream = Await _httpClient.GetStreamAsync(result.fileUrl)
 
         Return New MyImage(stream, result.width, result.height, result.postUrl, result.fileUrl, result.source, result.id)
+    End Function
+
+    Public Async Function AddFavouriteAsync(postId As Integer) As Task
+        If _currentSource.Auth IsNot Nothing Then
+            _currentSource.Auth = New BooruAuth(CFG.Username, CFG.Password)
+        End If
+
+        If _currentSource.Auth IsNot Nothing Then
+            Await _currentSource.AddFavoriteAsync(postId)
+        End If
     End Function
 
     Private ReadOnly ratingToString As New SortedList(Of Rating, String) From {
