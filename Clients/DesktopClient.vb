@@ -1,5 +1,4 @@
 ﻿Imports System.Drawing
-Imports System.Reflection.Metadata
 Imports System.Windows.Forms
 Imports Jiraisho.NativeMethod
 Imports Newtonsoft.Json
@@ -36,7 +35,7 @@ Public Class DesktopClient
                 Log(LogLvl.Debug, $"Unused device info: cb = {currMonitor.cb}, key = {currMonitor.DeviceKey}, string = {currMonitor.DeviceString}")
 
                 'Get DeviceName
-                Dim newMonitor = New Monitor(currMonitor.DeviceName)
+                Dim newMonitor = New Monitor(id, currMonitor.DeviceName)
 
                 'Get DeviceId
                 User32.EnumDisplayDevices(currMonitor.DeviceName, 0, currMonitor, &H1)
@@ -52,6 +51,7 @@ Public Class DesktopClient
                 newMonitor.Rectangle = User32.ToRectangle(rect)
 
                 Monitors.Add(id, newMonitor)
+                Registry.UpdateMonitor(newMonitor)
                 Log(LogLvl.Debug, "New monitor added: " & newMonitor.ToString(), Source:="New DesktopClient")
                 'Log(LogLvl.Debug, currMonitor.ToString())
             End If
@@ -60,9 +60,20 @@ Public Class DesktopClient
 
 
         If Monitors.Count = 0 Then
-            Log(LogLvl.Critical, "There is no usable monitor. Closing...", Source:="New DesktopClient")
+            Log(LogLvl.Critical, "No monitor detected!", Source:="New DesktopClient")
         End If
 
+        'Check config
+        'Style
+        If CFG.Style Is Nothing Then CFG.Style = New SortedList(Of Integer, CustomStyle)
+        For Each monitor In Monitors
+            If Not CFG.Style.ContainsKey(monitor.Key) Then
+                CFG.Style.Add(monitor.Key, CustomStyle.FitRight) 'ToDo: change default
+            Else
+                'ToDo: Check if value is in range
+            End If
+        Next
+        'History
         If CFG.MaxHistory < Monitors.Count Then
             CFG.MaxHistory = Monitors.Count
             Log(LogLvl.Warning, $"MaxHistory set to {Monitors.Count}, because there are that many monitors.", Source:="New DesktopClient")
@@ -70,8 +81,8 @@ Public Class DesktopClient
 
         Log(LogLvl.Info, $"{Monitors.Count} monitors found", Source:="New DesktopClient")
 
-        'Set default style
-        SetGlobalStyle(CFG.Style)
+        'Set style to center = No processing on windows side
+        SetGlobalStyle(Style.Center)
     End Sub
 
 
@@ -226,11 +237,13 @@ End Class
 
 
 Public Class Monitor
+    Public Id As Integer
     Public DeviceName As String ' \\.\DISPLAY1
     Public DeviceId As String   ' \\?\DISPLAY#GSM76FE#5&3b13964d&0&UID4354#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
     Public Rectangle As Rectangle
 
-    Public Sub New(DeviceName As String)
+    Public Sub New(Id As Integer, DeviceName As String)
+        Me.Id = Id
         Me.DeviceName = DeviceName
     End Sub
 

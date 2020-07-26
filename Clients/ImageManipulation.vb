@@ -1,4 +1,5 @@
-﻿Imports SixLabors.ImageSharp
+﻿Imports Newtonsoft.Json
+Imports SixLabors.ImageSharp
 Imports SixLabors.ImageSharp.Processing
 
 Public Class ImageManipulation
@@ -31,6 +32,7 @@ Public Class ImageManipulation
 
 End Class
 
+<JsonConverter(GetType(Converters.StringEnumConverter))>
 Public Enum CustomStyle
     None
     FitLeft

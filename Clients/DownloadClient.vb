@@ -133,7 +133,7 @@ Class DownloadClient
         End Try
     End Function
 
-    Public Async Function GetRandomImageAsync() As Task(Of MyImage)
+    Public Async Function GetRandomImageAsyncFor(Monitor As Monitor) As Task(Of BooruSharp.Search.Post.SearchResult?)
         'ToDo: Redo this spaghetti part...
         Log(LogLvl.Trace, "Called")
 
@@ -149,13 +149,8 @@ Class DownloadClient
         Log(LogLvl.Debug, "Search: " & String.Join(" ", tags))
 
         Dim result As BooruSharp.Search.Post.SearchResult
-        Dim mostLikelyNextMonitor = GetNextAvailableMonitor(DontAlterLastMonitor:=True)
-        If mostLikelyNextMonitor < 0 Then
-            mostLikelyNextMonitor = Windows.Forms.Screen.PrimaryScreen.DeviceName.Substring(11)
-        End If
-        Dim nextMon = Desktop.Monitors(mostLikelyNextMonitor)
-        Dim ratioOfNextMonitor = nextMon.Rectangle.Width / nextMon.Rectangle.Height
-        Dim resolutionV = nextMon.Rectangle.Width * nextMon.Rectangle.Height
+        Dim ratioOfNextMonitor = Monitor.Rectangle.Width / Monitor.Rectangle.Height
+        Dim resolutionV = Monitor.Rectangle.Width * Monitor.Rectangle.Height
 
         Try
             Await _asyncLock.WaitAsync() 'ToDo: Remove if bool on processing loop is sufficient
@@ -171,12 +166,12 @@ Class DownloadClient
                 Dim results As BooruSharp.Search.Post.SearchResult()
 
                 If _currentSource.HasMultipleRandomAPI() Then
-                    Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {String.Join(" ", tags)})")
+                    Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
                     results = Await _currentSource.GetRandomImagesAsync(100, tags.ToArray())
                     Log(LogLvl.Debug, $"Got {results.Length} results")
                 Else
                     'Just get one
-                    Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({String.Join(" ", tags)})")
+                    Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
                     ReDim results(0)
                     results(0) = Await _currentSource.GetRandomImageAsync(tags.ToArray())
                     Log(LogLvl.Debug, $"Got one result")
@@ -227,9 +222,18 @@ Class DownloadClient
             _asyncLock.Release()
         End Try
 
-        Dim stream = Await _httpClient.GetStreamAsync(result.fileUrl)
+        Return result
+    End Function
 
-        Return New MyImage(stream, result.width, result.height, result.postUrl, result.fileUrl, result.source, result.id)
+    Public Async Function DownloadFile(Url As Uri) As Task(Of IO.Stream)
+        Try
+            Dim response = Await _httpClient.GetAsync(Url, HttpCompletionOption.ResponseContentRead)
+            response.EnsureSuccessStatusCode()
+            Return Await response.Content.ReadAsStreamAsync()
+        Catch ex As Exception
+            Log(LogLvl.Warning, $"Failed to download {Url}", ex)
+            Return Nothing
+        End Try
     End Function
 
     Public Async Function AddFavouriteAsync(postId As Integer) As Task

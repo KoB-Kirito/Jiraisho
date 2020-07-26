@@ -76,20 +76,20 @@ Public Class UserInterface
         contextMenu.Items.Add(dropdownRating)
 
         'Style
-        dropdownStyle = New ToolStripMenuItem("Style")
-        AddHandler dropdownStyle.DropDown.Closing, AddressOf PreventClosingOnClick
-        dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Center", Nothing, New EventHandler(AddressOf SetStyle), "Center"))
-        dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Stretch", Nothing, New EventHandler(AddressOf SetStyle), "Stretch"))
-        dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Fit", Nothing, New EventHandler(AddressOf SetStyle), "Fit"))
-        dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Fill", Nothing, New EventHandler(AddressOf SetStyle), "Fill"))
-        'ToDo: Tile and Span do occupy ALL monitors. Add them?
-        For Each item As ToolStripMenuItem In dropdownStyle.DropDownItems
-            If CFG.Style.ToString() = item.Name Then
-                item.Checked = True
-                Exit For
-            End If
-        Next
-        contextMenu.Items.Add(dropdownStyle)
+        'dropdownStyle = New ToolStripMenuItem("Style")
+        'AddHandler dropdownStyle.DropDown.Closing, AddressOf PreventClosingOnClick
+        'dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Center", Nothing, New EventHandler(AddressOf SetStyle), "Center"))
+        'dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Stretch", Nothing, New EventHandler(AddressOf SetStyle), "Stretch"))
+        'dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Fit", Nothing, New EventHandler(AddressOf SetStyle), "Fit"))
+        'dropdownStyle.DropDownItems.Add(New ToolStripMenuItem("Fill", Nothing, New EventHandler(AddressOf SetStyle), "Fill"))
+        ''ToDo: Tile and Span do occupy ALL monitors. Add them?
+        'For Each item As ToolStripMenuItem In dropdownStyle.DropDownItems
+        '    If CFG.Style.ToString() = item.Name Then
+        '        item.Checked = True
+        '        Exit For
+        '    End If
+        'Next
+        'contextMenu.Items.Add(dropdownStyle)
 
         '-----------------
         contextMenu.Items.Add(New ToolStripSeparator)
@@ -145,21 +145,7 @@ Public Class UserInterface
 
         'Get current screen, save wallpaper of that screen
         Dim activeScreen = Screen.FromPoint(Cursor.Position)
-        Dim monitorId As Integer
-        If Integer.TryParse(activeScreen.DeviceName.Substring(11), monitorId) AndAlso CurrImages.ContainsKey(monitorId) Then
-            Dim path = CurrImages(monitorId).Filepath
-            Try
-                File.Copy(path, IO.Path.Combine(CFG.DirSaved, IO.Path.GetFileName(path)), True)
-            Catch ex As Exception
-                Log(LogLvl.Error, "Can't copy file", ex)
-            End Try
-            Log(LogLvl.Debug, "File copied")
-
-            'ToDo: Add to favourites
-
-        Else
-            Log(LogLvl.Error, "Failed to save that image")
-        End If
+        UserActions.SaveWallpaper(activeScreen)
 
         Log(LogLvl.Trace, "Reached end")
     End Sub
@@ -169,37 +155,17 @@ Public Class UserInterface
 
         'Get current screen, save wallpaper of that screen
         Dim activeScreen = Screen.FromPoint(Cursor.Position)
-        Dim monitorId As Integer
-        If Integer.TryParse(activeScreen.DeviceName.Substring(11), monitorId) AndAlso CurrImages.ContainsKey(monitorId) Then
-            Dim url = CurrImages(monitorId).PostUrl.AbsoluteUri
-            If String.IsNullOrEmpty(url) Then url = CurrImages(monitorId).FileUrl.AbsoluteUri
-            Log(LogLvl.Debug, "Url: " & url)
-            Try
-                System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.AppStarting
-                System.Diagnostics.Process.Start("explorer.exe", url)
-            Catch ex As Exception
-                Log(LogLvl.Error, "Can't open browser", ex)
-            Finally
-                System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default
-            End Try
-        Else
-            Log(LogLvl.Error, "Failed to get an image for screen " & activeScreen.DeviceName)
-        End If
+        UserActions.OpenWallpaper(activeScreen)
 
         Log(LogLvl.Trace, "Reached end")
     End Sub
 
-    Private Async Sub FavCurrentImage(sender As Object, e As EventArgs)
+    Private Sub FavCurrentImage(sender As Object, e As EventArgs)
         Log(LogLvl.Trace, "Called")
 
         'Get current screen, save wallpaper of that screen
         Dim activeScreen = Screen.FromPoint(Cursor.Position)
-        Dim monitorId As Integer
-        If Integer.TryParse(activeScreen.DeviceName.Substring(11), monitorId) AndAlso CurrImages.ContainsKey(monitorId) Then
-            Await Downloader.AddFavouriteAsync(CurrImages(monitorId).Id)
-        Else
-            Log(LogLvl.Error, "Failed to get an image for screen " & activeScreen.DeviceName)
-        End If
+        UserActions.FavWallpaper(activeScreen)
 
         Log(LogLvl.Trace, "Reached end")
     End Sub
@@ -279,18 +245,18 @@ Public Class UserInterface
         Log(LogLvl.Info, "Rating: " & rating.ToString() & "  ratingString: " & ratingString)
     End Sub
 
-    Private Sub SetStyle(sender As ToolStripMenuItem, e As EventArgs)
-        Dim style As Style = [Enum].Parse(GetType(Style), sender.Name)
-        Desktop.SetGlobalStyle(style)
-        CFG.Style = style
-        For Each item As ToolStripMenuItem In dropdownStyle.DropDownItems
-            If item Is sender Then
-                item.Checked = True
-            Else
-                item.Checked = False
-            End If
-        Next
-    End Sub
+    'Private Sub SetStyle(sender As ToolStripMenuItem, e As EventArgs)
+    '    Dim style As Style = [Enum].Parse(GetType(Style), sender.Name)
+    '    Desktop.SetGlobalStyle(style)
+    '    CFG.Style = style
+    '    For Each item As ToolStripMenuItem In dropdownStyle.DropDownItems
+    '        If item Is sender Then
+    '            item.Checked = True
+    '        Else
+    '            item.Checked = False
+    '        End If
+    '    Next
+    'End Sub
 
 
     Private Sub TrayDoubleClick(sender As Object, e As EventArgs)

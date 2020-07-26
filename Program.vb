@@ -7,17 +7,16 @@ Imports SixLabors.ImageSharp
 
 Module Program
 
-    Public CFG As Config
+    Sub Main(args As String()) 'Entry point
 
-    Public DIR_CONFIG As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppName)
-    Private PATH_CONFIG As String = Path.Combine(DIR_CONFIG, ".\config.json")
+        ' Handles context menu calls and exits then
+        CatchContextMenuCall(args)
 
-    Sub Main(args As String())
-        ' Registers app path to enable direct calls
-        Registry.UpdateAppPath()
+        ' Don't allow concurrent instances of the app
+        ExitIfAppIsAlreadyRunning()
 
-        ' Catches context calls, parses arguments, sets global loglevel
-        ParseArgs(args)
+        ' Sets global loglevel, parsed from arguments
+        SetLogLevel(args)
 
         ' Hook exit event, saves current config and disposes logger
         AddHandler AppDomain.CurrentDomain.ProcessExit, AddressOf ProcessExit
@@ -26,19 +25,22 @@ Module Program
         Log(LogLvl.Info, "Jiraisho v0.1")
         Log(LogLvl.Debug, $"IsHardwareAccelerated = {Numerics.Vector.IsHardwareAccelerated}")
 
+        ' Registers/Updates app path to enable direct calls via jiraisho.exe
+        Registry.UpdateAppPath()
+
         ' Load Config from json
         LoadConfig()
 
         ' Create directorys set in config
         CreateDirectorys()
 
-        ' Manages downloads of new wallpapers
+        ' Init downloader, manages downloads of new wallpapers
         Downloader = New DownloadClient
 
         ' Check internet connection
         CheckInternetConnection().GetAwaiter().GetResult()
 
-        ' Manages monitors, desktops and wallpapers
+        ' Init desktop, manages monitors, desktops and wallpapers
         Desktop = New DesktopClient
 
         ' Handles the actual work, downloads new image, sets it as background
@@ -46,58 +48,38 @@ Module Program
 
         ' Start user interface (tray icon, hotkeys, settings)
         StartUI() ' Blocks until UI closes
+
     End Sub
 
 
-    Private Sub ParseArgs(args As String())
-#Region "Context Menu Catch"
+    Private Sub CatchContextMenuCall(args As String())
         If args IsNot Nothing AndAlso args.Length > 0 AndAlso args(0).Contains("cmt") Then
+            'App was called from context menu
             Try
+                'Can't access the same logfile from two applications
                 FileLogDisabled = True
 
-                'Get current screen
-                Dim currScreen = Screen.FromPoint(Cursor.Position)
+                'Get selected screen
+                Dim selectedScreen = Screen.FromPoint(Cursor.Position)
 
                 Select Case args(1)
                     Case "fav"
-                    'ToDo: implement
+                        UserActions.FavWallpaper(selectedScreen)
 
                     Case "save"
-                        Dim dirSaved = Registry.GetValue("DirSaved")
-                        If dirSaved Is Nothing Then
-                            Log(LogLvl.Error, "Can't parse directory for saved images")
-                            Exit Select
-                        End If
-                        Dim path = Registry.GetValue(currScreen.DeviceName & "-filePath")
-                        If path IsNot Nothing Then
-                            If IO.File.Exists(path) Then
-                                Try
-                                    File.Copy(path, IO.Path.Combine(dirSaved, IO.Path.GetFileName(path)), True)
-                                Catch ex As Exception
-                                    Log(LogLvl.Error, "Can't copy file", ex)
-                                End Try
-                            Else
-                                Log(LogLvl.Error, "No file found at " & path)
-                            End If
-                        Else
-                            Log(LogLvl.Error, "No path found for " & currScreen.DeviceName)
-                        End If
+                        UserActions.SaveWallpaper(selectedScreen)
 
                     Case "open"
-                        Dim url = Registry.GetValue(currScreen.DeviceName & "-postUrl")
-                        If String.IsNullOrWhiteSpace(url) Then url = Registry.GetValue(currScreen.DeviceName & "-fileUrl")
-                        If String.IsNullOrWhiteSpace(url) Then
-                            Log(LogLvl.Error, "Can't get url for " & currScreen.DeviceName)
-                            Exit Select
-                        End If
-                        Try
-                            System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.AppStarting
-                            System.Diagnostics.Process.Start("explorer.exe", url)
-                        Catch ex As Exception
-                            Log(LogLvl.Error, "Can't open browser", ex)
-                        Finally
-                            System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default
-                        End Try
+                        UserActions.OpenWallpaper(selectedScreen)
+
+                    Case "favlast"
+                        UserActions.FavWallpaper(selectedScreen, last:=True)
+
+                    Case "savelast"
+                        UserActions.SaveWallpaper(selectedScreen, last:=True)
+
+                    Case "openlast"
+                        UserActions.OpenWallpaper(selectedScreen, last:=True)
 
                     Case Else
                         Log(LogLvl.Error, "Can't process " & args(1))
@@ -110,14 +92,16 @@ Module Program
                 Environment.Exit(0)
             End Try
         End If
-#End Region
+    End Sub
 
-        'Ensure to exit if the app is already running
+    Private Sub ExitIfAppIsAlreadyRunning()
         If System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1 Then
             MessageBox.Show("App is already running!", AppName)
             Environment.Exit(0)
         End If
+    End Sub
 
+    Private Sub SetLogLevel(args As String())
 #If DEBUG Then
         'Always log everything while debugging
         GlobalLogLevel = LogLvl.Trace
@@ -172,6 +156,11 @@ Module Program
         DisposeLogger()
     End Sub
 
+#Region "Config"
+    Public CFG As Config
+    Public DIR_CONFIG As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppName)
+    Private PATH_CONFIG As String = Path.Combine(DIR_CONFIG, ".\config.json")
+
     Private Sub LoadConfig()
         Log(LogLvl.Trace, "Called")
 
@@ -179,7 +168,6 @@ Module Program
             .Source = "Konachan",
             .Rating = Rating.Safe,
             .IntervalInSeconds = 30,
-            .Style = Style.Fit,
             .SkipObscuredMonitors = True,
             .DirHistory = Path.Combine(Path.GetTempPath(), AppName, "History"),
             .DirSaved = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName),
@@ -228,9 +216,6 @@ Module Program
         If CFG.IntervalInSeconds < 5 Then
             CFG.IntervalInSeconds = 5
         End If
-        If CFG.Style < 0 OrElse CFG.Style > 5 Then
-            CFG.Style = defaultConfig.Style
-        End If
         If String.IsNullOrWhiteSpace(CFG.DirHistory) Then
             CFG.DirHistory = defaultConfig.DirHistory
         End If
@@ -275,6 +260,7 @@ Module Program
 
         Log(LogLvl.Trace, "Reached end")
     End Sub
+#End Region
 
     Private Sub CreateDirectorys()
         Log(LogLvl.Trace, "Called")
@@ -303,7 +289,7 @@ Module Program
             If failCount > 3 Then
                 Log(LogLvl.Critical, $"Can't reach the internet.{vbCrLf}Can't download wallpapers without access to the internet.")
             End If
-            Await Task.Delay(5000)
+            Await Task.Delay(4000)
         Loop
 
         Log(LogLvl.Trace, "Reached end")
@@ -312,12 +298,12 @@ Module Program
     Public Sub StartProcessingLoop()
         Log(LogLvl.Trace, "Called")
 
-        'Run once at start to get first image
-        ProcessingLoop.ProcessingLoop(Nothing, Nothing)
+        'Ensure that there is a wallpaper for every monitor already
+        GetNextWallpaperForAllMonitors()
 
         SlideshowTimer = New Timers.Timer
         AddHandler SlideshowTimer.Elapsed, AddressOf ProcessingLoop.ProcessingLoop
-        SlideshowTimer.Interval = 5000 'Set interval gets set after first wallpaper change
+        SlideshowTimer.Interval = 3000 'Set interval gets set after first wallpaper change
         SlideshowTimer.AutoReset = True
         SlideshowTimer.Start()
 
@@ -354,7 +340,7 @@ Module Program
 
         'Wallpaper
         <JsonProperty(Order:=10)> Public IntervalInSeconds As Integer
-        <JsonProperty(Order:=11)> Public Style As Style
+        <JsonProperty(Order:=11)> Public Style As SortedList(Of Integer, CustomStyle)
         <JsonProperty(Order:=12)> Public SkipObscuredMonitors As Boolean
 
         'Files
