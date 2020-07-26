@@ -56,7 +56,7 @@ Public Class UserActions
         End If
         Try
             System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.AppStarting
-            System.Diagnostics.Process.Start("explorer.exe", url)
+            System.Diagnostics.Process.Start("explorer.exe", """" & url & """")
         Catch ex As Exception
             Log(LogLvl.Error, "Can't open browser", ex)
         Finally
