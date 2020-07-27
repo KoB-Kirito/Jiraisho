@@ -130,7 +130,8 @@ Module ProcessingLoop
 
             'Load image for alteration
             'ToDo: Skip if not nessesary
-            Using source = Image.Load(New Configuration With {.MaxDegreeOfParallelism = Environment.ProcessorCount / 2}, imageStream)
+            'ToDo: Limit cpu usage
+            Using source = Image.Load(imageStream)
                 Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
 
                 'Mutate image depending on set style
