@@ -110,8 +110,6 @@ Module ProcessingLoop
             If imageStream Is Nothing Then
                 Log(LogLvl.Warning, "Download did not finish in time")
                 Return False
-            Else
-                Log(LogLvl.Debug, "imageStream: " & imageStream.CanRead)
             End If
             Log(LogLvl.Debug, $"Download successfull after {benchmark.ElapsedMilliseconds} ms")
 
@@ -129,15 +127,12 @@ Module ProcessingLoop
                 imageStream.CopyTo(fs)
             End Using
             imageStream.Position = 0
-            Log(LogLvl.Debug, "imageStream after CopyTo")
-            Log(LogLvl.Debug, "Length: " & imageStream.Length)
-
 
             'Load image for alteration
-            'ToDo: Skip loading if not nessesary
-            Using source = Image.Load(imageStream)
-                Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height}")
-                Log(LogLvl.Trace, $"Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height}")
+            'ToDo: Skip if not nessesary
+            Using source = Image.Load(New Configuration With {.MaxDegreeOfParallelism = Environment.ProcessorCount / 2}, imageStream)
+                Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
+
                 'Mutate image depending on set style
                 Select Case CFG.Style(Monitor.Id)
                     Case CustomStyle.FitLeft
@@ -163,6 +158,8 @@ Module ProcessingLoop
                     Case Else
                         Log(LogLvl.Warning, "No custom style set")
 
+                        'ToDo: Implement other styles
+
                 End Select
 
                 Log(LogLvl.Debug, $"Source after manipulation: {source.Width} x {source.Height}")
@@ -173,6 +170,11 @@ Module ProcessingLoop
                     source.SaveAsPng(fs, New Formats.Png.PngEncoder With {.CompressionLevel = 6})
                 End Using
             End Using
+
+            'Fixes Imagesharps gigantic bufferarrays partly
+            'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
+            Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
+            GC.Collect()
 
             'Only keep the last x wallpapers (last, curr, next)
             Dim fiArray = monitorDir.GetFiles()
