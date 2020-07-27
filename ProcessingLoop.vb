@@ -87,6 +87,12 @@ Module ProcessingLoop
                 Log(LogLvl.Debug, $"Successfully got next wallpaper in {processingTime.ElapsedMilliseconds} ms")
             End If
 
+            'Fixes Imagesharps gigantic bufferarrays partly
+            'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
+            'ToDo: Make this configurable
+            Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
+            GC.Collect()
+
         Finally
             _isStillProcessing = False
         End Try
@@ -188,11 +194,6 @@ Module ProcessingLoop
             'Save to registry
             Registry.SetNextWallpaperFor(Monitor, result.Value, originalPath, editedPath)
         End Using
-
-        'Fixes Imagesharps gigantic bufferarrays partly
-        'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
-        Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
-        GC.Collect()
 
         Return True
     End Function

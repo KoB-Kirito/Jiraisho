@@ -299,6 +299,7 @@ Module Program
     End Function
 
     Private Sub SetupImagesharp()
+        'ToDo: Configurable?
         Configuration.Default.MaxDegreeOfParallelism = Environment.ProcessorCount / 2
         Configuration.Default.MemoryAllocator = SixLabors.ImageSharp.Memory.ArrayPoolMemoryAllocator.CreateWithModeratePooling()
     End Sub
