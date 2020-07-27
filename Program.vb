@@ -43,6 +43,9 @@ Module Program
         ' Init desktop, manages monitors, desktops and wallpapers
         Desktop = New DesktopClient
 
+        ' Image manipuation setting
+        SetupImagesharp()
+
         ' Handles the actual work, downloads new image, sets it as background
         StartProcessingLoop()
 
@@ -295,7 +298,12 @@ Module Program
         Log(LogLvl.Trace, "Reached end")
     End Function
 
-    Public Sub StartProcessingLoop()
+    Private Sub SetupImagesharp()
+        Configuration.Default.MaxDegreeOfParallelism = Environment.ProcessorCount / 2
+        Configuration.Default.MemoryAllocator = SixLabors.ImageSharp.Memory.ArrayPoolMemoryAllocator.CreateWithModeratePooling()
+    End Sub
+
+    Private Sub StartProcessingLoop()
         Log(LogLvl.Trace, "Called")
 
         'Ensure that there is a wallpaper for every monitor already

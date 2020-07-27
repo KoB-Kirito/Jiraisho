@@ -130,7 +130,6 @@ Module ProcessingLoop
 
             'Load image for alteration
             'ToDo: Skip if not nessesary
-            'ToDo: Limit cpu usage
             Using source = Image.Load(imageStream)
                 Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
 
@@ -172,11 +171,6 @@ Module ProcessingLoop
                 End Using
             End Using
 
-            'Fixes Imagesharps gigantic bufferarrays partly
-            'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
-            Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
-            GC.Collect()
-
             'Only keep the last x wallpapers (last, curr, next)
             Dim fiArray = monitorDir.GetFiles()
             If fiArray.Count > CFG.MaxHistory * 2 Then
@@ -194,6 +188,11 @@ Module ProcessingLoop
             'Save to registry
             Registry.SetNextWallpaperFor(Monitor, result.Value, originalPath, editedPath)
         End Using
+
+        'Fixes Imagesharps gigantic bufferarrays partly
+        'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
+        Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
+        GC.Collect()
 
         Return True
     End Function
