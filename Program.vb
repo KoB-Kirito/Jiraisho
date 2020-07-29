@@ -44,7 +44,7 @@ Module Program
         Desktop = New DesktopClient
 
         ' Image manipuation setting
-        SetupImagesharp()
+        InitImageSharp()
 
         ' Handles the actual work, downloads new image, sets it as background
         StartProcessingLoop()
@@ -298,9 +298,10 @@ Module Program
         Log(LogLvl.Trace, "Reached end")
     End Function
 
-    Private Sub SetupImagesharp()
+    Private Sub InitImageSharp()
         'ToDo: Configurable?
         Configuration.Default.MaxDegreeOfParallelism = Environment.ProcessorCount / 2
+        'ToDo: Performance testing: memory vs cpu, -> Make configurable
         Configuration.Default.MemoryAllocator = SixLabors.ImageSharp.Memory.ArrayPoolMemoryAllocator.CreateWithModeratePooling()
     End Sub
 

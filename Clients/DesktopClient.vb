@@ -116,11 +116,11 @@ Public Class DesktopClient
     End Function
 
     Public Function IsDesktopVisible(DeviceName As String) As Boolean
-        Log(LogLvl.Trace, "Called with " & DeviceName)
+        'Log(LogLvl.Trace, "Called with " & DeviceName)
 
         'If feature disabled
         If CFG.SkipObscuredMonitors = False Then
-            Log(LogLvl.Debug, "Feature is disabled")
+            Log(LogLvl.Debug, "Feature is disabled, skipping check")
             Return True
         End If
 
@@ -136,14 +136,14 @@ Public Class DesktopClient
         For Each screen In System.Windows.Forms.Screen.AllScreens
             If screen.DeviceName = DeviceName Then
                 sScreen = screen
-                Log(LogLvl.Info, $"Screen: {sScreen.DeviceName} ({sScreen.Bounds.ToString()})[WorkingArea:{sScreen.WorkingArea.ToString()}]")
+                Log(LogLvl.Debug, $"Screen: {sScreen.DeviceName} ({sScreen.Bounds.ToString()})[WorkingArea:{sScreen.WorkingArea.ToString()}]")
                 Exit For
             End If
         Next
         If sScreen Is Nothing Then
             Log(LogLvl.Warning, "Screen is nothing")
-            'Failback
-            Return True
+
+            Return True 'Failback
         End If
 
         Dim workingArea = sScreen.WorkingArea
@@ -179,9 +179,10 @@ Public Class DesktopClient
 
                                                            'Only add windows that intersect with desktop
                                                            If rect.IntersectsWith(workingArea) Then
-                                                               Log(LogLvl.Info, $"{hWnd.ToString(),8} ({rect.Width * rect.Height,8}) {rect.ToString(),-40} [{[class].ToString()}] {title.ToString()} {flagString}")
+                                                               'Lists all windows with size and title, may contain sensitive data
+                                                               Log(LogLvl.Trace, $"{hWnd.ToString(),8} ({rect.Width * rect.Height,8}) {rect.ToString(),-40} [{[class].ToString()}] {title.ToString()} {flagString}")
                                                                windowRects.Add(rect)
-                                                           ElseIf rect.Width > 0 OrElse rect.Height > 0 Then
+                                                               'ElseIf rect.Width > 0 OrElse rect.Height > 0 Then
                                                                'Debug
                                                                'Log(LogLvl.Trace, $"{hWnd.ToString(),8} ({rect.Width * rect.Height}) {rect.ToString()} [{[class].ToString()}] {title.ToString()} {flagString}")
                                                            End If
@@ -194,40 +195,37 @@ Public Class DesktopClient
             If windowRects.Count = 0 Then Return True
 
             'Get rectangle of monitor
-            Log(LogLvl.Debug, $"{windowRects.Count} windows intersect with {sScreen.DeviceName} {workingArea.ToString()}")
+            'Log(LogLvl.Debug, $"{windowRects.Count} windows intersect with {sScreen.DeviceName} {workingArea.ToString()}")
 
             'subtract all windows from the desktop
             Dim remaining = workingArea.Subtract(windowRects)
 
-            If GlobalLogLevel <= LogLvl.Debug Then Utils.SaveScreenshotWithRectangles(DIR_CONFIG & "\remaining.bmp", windowRects, remaining)
+            'Debug
+            If GlobalLogLevel <= LogLvl.Debug Then Utils.SaveScreenshotWithRectangles(DIR_CONFIG & "\" & sScreen.DeviceName.Substring(4) & "_remaining.bmp", windowRects, remaining)
 
             'Get accumulated volume of the remaining area
             Dim remainingV As Integer
             For Each rect In remaining
                 Dim intersection = Rectangle.Intersect(workingArea, rect)
-                Log(LogLvl.Trace, $"intersection={intersection.ToString()}")
-                Log(LogLvl.Debug, remainingV)
                 remainingV += intersection.Width * intersection.Height
-                Log(LogLvl.Debug, remainingV)
             Next
 
             'Get volume of the working area
             Dim workingAreaV = workingArea.Width * workingArea.Height
             Dim remainingPercent = remainingV / workingAreaV
 
-            Log(LogLvl.Debug, $"{Math.Round(remainingPercent, 2)} = {remainingV} / {workingAreaV}")
-
-
             If remainingPercent < 0.1 Then
-                Log(LogLvl.Warning, "remainingPercent: " & Math.Round(remainingPercent * 100, 0) & "%")
+                Log(LogLvl.Warning, Math.Round(remainingPercent * 100, 0) & "% of desktop visible (Minimum is 10%)")
                 Return False
             Else
-                Log(LogLvl.Info, "remainingPercent: " & Math.Round(remainingPercent * 100, 0) & "%")
+                Log(LogLvl.Info, Math.Round(remainingPercent * 100, 0) & "% of desktop visible")
                 Return True
             End If
 
         Else
             Log(LogLvl.Warning, "EnumWindows returned False")
+
+            Return True 'Failback
         End If
 
         Return False

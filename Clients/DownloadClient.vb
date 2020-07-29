@@ -28,6 +28,7 @@ Class DownloadClient
     }
 
     Private _httpClient As HttpClient
+    Private _httpClientHandler As HttpClientHandler
     Private _currentSource As ABooru
     Private _asyncLock As New SemaphoreSlim(1, 1)
 
@@ -102,7 +103,8 @@ Class DownloadClient
     Public Sub New()
         Log(LogLvl.Trace, "Called", Source:="New DownloadClient")
 
-        _httpClient = New HttpClient
+        _httpClientHandler = New HttpClientHandler
+        _httpClient = New HttpClient(_httpClientHandler)
         If CFG.Source <> "LocalFile" Then
             SetCurrentSource(CFG.Source)
         End If
@@ -133,9 +135,9 @@ Class DownloadClient
         End Try
     End Function
 
-    Public Async Function GetRandomImageAsyncFor(Monitor As Monitor) As Task(Of BooruSharp.Search.Post.SearchResult?)
+    Public Async Function GetRandomImageAsync(Monitor As Monitor) As Task(Of BooruSharp.Search.Post.SearchResult?)
         'ToDo: Redo this spaghetti part...
-        Log(LogLvl.Trace, "Called")
+        'Log(LogLvl.Trace, "Called")
 
         'Init tags, add rating if set, add custom tags from config
         Dim tags As New List(Of String)
@@ -146,7 +148,7 @@ Class DownloadClient
             Next
         End If
 
-        Log(LogLvl.Debug, "Search: " & String.Join(" ", tags))
+        'Log(LogLvl.Debug, "Search string: " & String.Join(" ", tags))
 
         Dim result As BooruSharp.Search.Post.SearchResult
         Dim ratioOfNextMonitor = Monitor.Rectangle.Width / Monitor.Rectangle.Height
@@ -168,7 +170,7 @@ Class DownloadClient
                 If _currentSource.HasMultipleRandomAPI() Then
                     Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
                     results = Await _currentSource.GetRandomImagesAsync(100, tags.ToArray())
-                    Log(LogLvl.Debug, $"Got {results.Length} results")
+                    Log(LogLvl.Debug, $"Got {results.Length} search results")
                 Else
                     'Just get one
                     Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
@@ -183,7 +185,7 @@ Class DownloadClient
 
                     'Is image
                     If Not res.fileUrl.LocalPath.IsImage Then
-                        Log(LogLvl.Warning, $"IsImage-Check failed. LocalPath: {res.fileUrl.LocalPath}")
+                        Log(LogLvl.Warning, $"Extension indicates that file is not an image ({res.fileUrl.LocalPath})")
                         Continue For
                     End If
 
@@ -193,8 +195,6 @@ Class DownloadClient
                         If (Not CFG.AllowSmallDeviations AndAlso Not ratioOfPost = ratioOfNextMonitor) OrElse (CFG.AllowSmallDeviations AndAlso Math.Abs(ratioOfNextMonitor - ratioOfPost) > 0.2) Then
                             Log(LogLvl.Debug, $"Ratio is not okay ({Math.Abs(ratioOfNextMonitor - ratioOfPost)}) allowDeviation: {CFG.AllowSmallDeviations}")
                             Continue For
-                        Else
-                            Log(LogLvl.Info, "Ratio is OK!")
                         End If
                     End If
                     'Min resolution
@@ -208,15 +208,14 @@ Class DownloadClient
 
                     'Only reached if everything is okay
                     'Just use the first one that satisfies all requirements
-                    Log(LogLvl.Info, $"Passed: {res.id} [{res.width} x {res.height}px]({res.postUrl})")
+                    Log(LogLvl.Info, $"Passed: {res.id} [{res.width} x {res.height}px]({res.postUrl}) Tries: {tries}")
                     result = res
                     Exit Do 'Exit point for loop
                 Next
             Loop
-            Log(LogLvl.Debug, "Success. Tries: " & tries)
         Catch ex As Exception
+            Log(LogLvl.Debug, "Exception:", ex)
             Log(LogLvl.Error, CFG.Source & " replied: " & ex.Message)
-            Log(LogLvl.Debug, "Exception", ex)
             Return Nothing
         Finally
             _asyncLock.Release()
@@ -225,7 +224,7 @@ Class DownloadClient
         Return result
     End Function
 
-    Public Async Function DownloadFile(Url As Uri) As Task(Of IO.Stream)
+    Public Async Function DownloadFileAsync(Url As Uri) As Task(Of IO.Stream)
         Try
             Dim response = Await _httpClient.GetAsync(Url, HttpCompletionOption.ResponseContentRead)
             response.EnsureSuccessStatusCode()

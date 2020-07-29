@@ -9,6 +9,7 @@ Module ProcessingLoop
     Public Downloader As DownloadClient
 
     Private _isStillProcessing As Boolean
+    Private _overdueCounter As Integer
     Private _lastMonitor As Integer
 
     Public Sub GetNextWallpaperForAllMonitors(Optional Overwrite As Boolean = False)
@@ -25,10 +26,11 @@ Module ProcessingLoop
             End If
 
             'Get new image
-            workers.Add(GetNextWallpaperFor(monitor))
+            workers.Add(GetNextWallpaper(monitor))
         Next
 
         If Not Task.WaitAll(workers.ToArray(), 30000) Then
+            'Wait 30 seconds max
             Log(LogLvl.Warning, "Failed to preload wallpapers for each monitor")
         End If
     End Sub
@@ -36,9 +38,20 @@ Module ProcessingLoop
     Public Sub ProcessingLoop(sender As Object, e As Timers.ElapsedEventArgs)
         'Ensure that the loop runs not concurrent
         If _isStillProcessing Then
-            Log(LogLvl.Warning, "Loop is still processing...")
-            SetShortRetryTimer()
+            'Check if the loop is waiting for another loop for too long
+            If _overdueCounter >= 3 Then
+                Log(LogLvl.Warning, $"Loop is still processing... (Waited {_overdueCounter} seconds)")
+            Else
+                Log(LogLvl.Debug, $"Loop is still processing...")
+            End If
+            _overdueCounter += 1
+
+            'Retry every second
+            SetShortRetryTimer(1000)
+
             Return
+        Else
+            _overdueCounter = 0
         End If
 
         'Lock processing loop while processing
@@ -50,25 +63,29 @@ Module ProcessingLoop
             processingTime.Start()
 
             'Get next available monitor
-            Dim lastMonitor = _lastMonitor
             Dim nextMonitorId = GetNextAvailableMonitor()
-            Log(LogLvl.Debug, "Next monitor: " & nextMonitorId)
+            Log(LogLvl.Debug, "nextMonitorId: " & nextMonitorId)
 
             'Skip if no monitor is available
             If nextMonitorId = -1 Then
-                Log(LogLvl.Warning, "No monitor was available for output")
+                Log(LogLvl.Warning, "No monitor was available for output (No desktop was visible)")
 
-                'Check every 5 seconds if no monitor was available
+                'Retry every 5 seconds if no monitor was available
                 SetShortRetryTimer()
                 Return
             End If
             Dim nextMonitor = Desktop.Monitors(nextMonitorId)
+            Log(LogLvl.Info, $"Processing {nextMonitor.DeviceName.Substring(4)}...")
 
             'Get next image for nextMonitor
             Dim currPath = Registry.GetNextWallpaperPathFor(nextMonitor)
 
             'Check next image
-            If currPath IsNot Nothing AndAlso IO.File.Exists(currPath) Then
+            If currPath Is Nothing Then
+                Log(LogLvl.Warning, "Could not get path for next image from registry")
+            ElseIf Not IO.File.Exists(currPath) Then
+                Log(LogLvl.Warning, $"File for next image not found ({currPath})")
+            Else
                 'Actually set wallpaper
                 Desktop.SetWallpaper(nextMonitorId, currPath)
 
@@ -77,21 +94,26 @@ Module ProcessingLoop
 
                 'Update registry
                 Registry.ShiftWallpapersFor(nextMonitor)
+
+                Log(LogLvl.Info, $"New wallpaper set after {processingTime.ElapsedMilliseconds} ms")
             End If
 
             'Get next wallpaper
-            Dim t = GetNextWallpaperFor(nextMonitor)
-            If Not t.Wait(SlideshowTimer.Interval - processingTime.ElapsedMilliseconds - 10) OrElse Not t.Result Then
-                Log(LogLvl.Warning, "Failed to get next wallpaper in time")
-            Else
-                Log(LogLvl.Debug, $"Successfully got next wallpaper in {processingTime.ElapsedMilliseconds} ms")
+            Dim t = GetNextWallpaper(nextMonitor, processingTime)
+            If Not t.Wait(SlideshowTimer.Interval + 10000) Then
+                Log(LogLvl.Warning, "Cancelled GetNextWallpaper due beeing 10 seconds overdue")
             End If
+            If t.Result Then
+                Log(LogLvl.Info, $"Finished after {processingTime.ElapsedMilliseconds} ms")
+            Else
+                Log(LogLvl.Warning, "Failed to get next wallpaper")
+            End If
+            t.Dispose()
 
-            'Fixes Imagesharps gigantic bufferarrays partly
-            'ToDo: Improve this further https://github.com/SixLabors/ImageSharp/discussions/1290
-            'ToDo: Make this configurable
+            'Hint GC to collect now while idling
             Runtime.GCSettings.LargeObjectHeapCompactionMode = Runtime.GCLargeObjectHeapCompactionMode.CompactOnce
-            GC.Collect()
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, True) 'ToDo: Make mode configurable
+            'Default = Forced, because ~30MB occupied memory looks better than > 300MB
 
         Finally
             _isStillProcessing = False
@@ -99,25 +121,30 @@ Module ProcessingLoop
 
     End Sub
 
-    Private Async Function GetNextWallpaperFor(Monitor As Monitor) As Task(Of Boolean)
-        Dim benchmark As New Stopwatch
-        benchmark.Start()
+    Private Async Function GetNextWallpaper(Monitor As Monitor, Optional watch As Stopwatch = Nothing) As Task(Of Boolean)
+        Log(LogLvl.Info, "Preparing next wallpaper...")
+
+        'Cheching processingtime
+        If watch Is Nothing Then
+            watch = New Stopwatch
+            watch.Start()
+        End If
 
         'Search next image
-        Dim result = Await Downloader.GetRandomImageAsyncFor(Monitor)
+        Dim result = Await Downloader.GetRandomImageAsync(Monitor)
         If result Is Nothing Then
             Log(LogLvl.Warning, "Result from downloader was nothing")
             Return False
         End If
-        Log(LogLvl.Debug, $"Search successfull after {benchmark.ElapsedMilliseconds} ms")
+        Log(LogLvl.Info, $"Search successfull after {watch.ElapsedMilliseconds} ms")
 
         'Download image
-        Using imageStream = Await Downloader.DownloadFile(result.Value.fileUrl)
+        Using imageStream = Await Downloader.DownloadFileAsync(result.Value.fileUrl)
             If imageStream Is Nothing Then
                 Log(LogLvl.Warning, "Download did not finish in time")
                 Return False
             End If
-            Log(LogLvl.Debug, $"Download successfull after {benchmark.ElapsedMilliseconds} ms")
+            Log(LogLvl.Debug, $"Download successfull after {watch.ElapsedMilliseconds} ms")
 
             'Prepare and save image
             Dim originalPath As String = ""
@@ -137,12 +164,12 @@ Module ProcessingLoop
             'Load image for alteration
             'ToDo: Skip if not nessesary
             Using source = Image.Load(imageStream)
-                Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
+                'Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
 
                 'Mutate image depending on set style
                 Select Case CFG.Style(Monitor.Id)
                     Case CustomStyle.FitLeft
-                        Log(LogLvl.Info, "Mutating image for FitLeft")
+                        Log(LogLvl.Trace, "Mutating image for FitLeft")
                         source.Mutate(Sub(x)
                                           x.Resize(New ResizeOptions() With {
                                                       .Mode = ResizeMode.Pad,
@@ -152,7 +179,7 @@ Module ProcessingLoop
                                       End Sub)
 
                     Case CustomStyle.FitRight
-                        Log(LogLvl.Info, "Mutating image for FitRight")
+                        Log(LogLvl.Trace, "Mutating image for FitRight")
                         source.Mutate(Sub(x)
                                           x.Resize(New ResizeOptions() With {
                                                        .Mode = ResizeMode.Pad,
@@ -168,7 +195,7 @@ Module ProcessingLoop
 
                 End Select
 
-                Log(LogLvl.Debug, $"Source after manipulation: {source.Width} x {source.Height}")
+                'Log(LogLvl.Debug, $"Source after manipulation: {source.Width} x {source.Height}")
 
                 'Save file
                 editedPath = Path.Combine(monitorDirPath, $"{CFG.Source}_{result.Value.id}_edited.png")
@@ -189,7 +216,7 @@ Module ProcessingLoop
                     End Try
                 Next
             End If
-            Log(LogLvl.Debug, $"Image manipulation successfull after {benchmark.ElapsedMilliseconds} ms")
+            Log(LogLvl.Info, $"Style applied after {watch.ElapsedMilliseconds} ms")
 
             'Save to registry
             Registry.SetNextWallpaperFor(Monitor, result.Value, originalPath, editedPath)
@@ -201,10 +228,10 @@ Module ProcessingLoop
     ''' <summary>
     ''' Sets the timer to a short period.
     ''' </summary>
-    Private Sub SetShortRetryTimer()
-        If SlideshowTimer.Interval > 5000.0 Then
+    Private Sub SetShortRetryTimer(Optional newInterval As Double = 5000.0)
+        If SlideshowTimer.Interval > newInterval Then
             SlideshowTimer.Stop()
-            SlideshowTimer.Interval = 5000.0
+            SlideshowTimer.Interval = newInterval
             SlideshowTimer.Start()
         End If
     End Sub
@@ -223,7 +250,7 @@ Module ProcessingLoop
 
     Private Function GetNextAvailableMonitor(Optional DontAlterLastMonitor As Boolean = False) As Integer
         Dim count = Desktop.Monitors.Count
-        Log(LogLvl.Debug, "Monitors.Count: " & count)
+        'Log(LogLvl.Debug, "Monitors.Count: " & count)
         If count = 0 Then Return -1 'If dict is empty
         If count = 1 Then 'If dict has only one item
             Dim firstKey = Desktop.Monitors.First().Key
@@ -240,7 +267,7 @@ Module ProcessingLoop
         If _lastMonitor < currLowestKey OrElse
         _lastMonitor > currHighestKey Then _lastMonitor = currHighestKey
         Dim i = _lastMonitor 'Starting point
-        Log(LogLvl.Debug, $"Start={i} currLowest={currLowestKey} currHighest={currHighestKey}")
+        'Log(LogLvl.Debug, $"Start={i} currLowest={currLowestKey} currHighest={currHighestKey}")
         Do
             'Increment iterator
             If i >= currHighestKey Then
@@ -257,7 +284,7 @@ Module ProcessingLoop
                 Continue Do
             End If
 
-            Log(LogLvl.Debug, "Checking " & i)
+            'Log(LogLvl.Debug, "Checking " & i)
             If Desktop.IsDesktopVisible(i) Then
                 If Not DontAlterLastMonitor Then _lastMonitor = i
                 Return i

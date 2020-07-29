@@ -108,7 +108,7 @@ Public Module Extensions
     Public Function Subtract(ByVal rect As Rectangle, ByVal subtracted As IEnumerable(Of Rectangle), Optional tolerance As Integer = 4) As List(Of Rectangle)
         Dim output As New List(Of Rectangle) From {rect}
 
-        Dim count As Integer 'debug
+        'Dim count As Integer 'debug
 
         For Each sRect In subtracted
             Dim temp As New List(Of Rectangle)
@@ -121,10 +121,10 @@ Public Module Extensions
             output.AddRange(temp)
 
             'Debug
-            If GlobalLogLevel <= LogLvl.Trace Then
-                count += 1
-                Utils.SaveScreenshotWithRectangles(DIR_CONFIG & $"\{count}_subtract.bmp", {sRect}, output)
-            End If
+            'If GlobalLogLevel <= LogLvl.Trace Then
+            '    count += 1
+            '    Utils.SaveScreenshotWithRectangles(DIR_CONFIG & $"\{count}_subtract.bmp", {sRect}, output)
+            'End If
         Next
 
         Return output
