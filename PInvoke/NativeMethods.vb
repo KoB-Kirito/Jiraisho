@@ -13,6 +13,7 @@ Namespace NativeMethod
         End Function
 
     End Class
+
     Public Class User32
         Public Shared Lock As New Object
 
@@ -89,6 +90,20 @@ Namespace NativeMethod
         End Function
 #End Region
 
+#Region "Idling Detection"
+        Friend Declare Auto Function GetLastInputInfo Lib "user32.dll" (ByRef plii As LASTINPUTINFO) As Boolean
+        <StructLayout(LayoutKind.Sequential)>
+        Structure LASTINPUTINFO
+            <MarshalAs(UnmanagedType.U4)>
+            Public cbSize As Integer
+            <MarshalAs(UnmanagedType.U4)>
+            Public dwTime As Integer
+
+            Public Sub New(SetSize As Boolean)
+                If SetSize Then Me.cbSize = Marshal.SizeOf(Me)
+            End Sub
+        End Structure
+#End Region
 
         <StructLayout(LayoutKind.Sequential)>
         Public Structure RECT

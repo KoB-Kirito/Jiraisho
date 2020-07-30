@@ -62,6 +62,23 @@ Module ProcessingLoop
             Dim processingTime As New Stopwatch
             processingTime.Start()
 
+            'Check if user is idling
+            'ToDo: Make this function configurable
+            Dim lastInput As New NativeMethod.User32.LASTINPUTINFO(True)
+            If NativeMethod.User32.GetLastInputInfo(lastInput) Then
+                Dim idleTime = Environment.TickCount - lastInput.dwTime
+                If idleTime > 60000 Then '1min, ToDo: Add to config
+                    Log(LogLvl.Warning, $"User is idling for {Math.Round(idleTime / 1000, 0)} seconds. Waiting...")
+                    SetShortRetryTimer(10000)
+                    Return
+                Else
+                    Log(LogLvl.Info, $"User is not idling ({Math.Round(idleTime / 1000, 0)} seconds)")
+                End If
+            Else
+                Log(LogLvl.Warning, "Failed to get last input info")
+                'Failback -> Just go on and assume the user is not idling
+            End If
+
             'Get next available monitor
             Dim nextMonitorId = GetNextAvailableMonitor()
             Log(LogLvl.Debug, "nextMonitorId: " & nextMonitorId)
