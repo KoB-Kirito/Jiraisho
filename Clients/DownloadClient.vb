@@ -3,11 +3,13 @@ Imports System.IO
 Imports System.Net.Http
 Imports System.Threading
 Imports BooruSharp.Booru
+Imports BooruSharp.Others
 Imports Newtonsoft.Json
 Imports SixLabors.ImageSharp
 
 Class DownloadClient
     Public Shared ReadOnly Property Sources As New List(Of String) From {
+        "Pixiv",
         "Atfbooru",
         "Danbooru",
         "E621",
@@ -32,13 +34,49 @@ Class DownloadClient
     Private _currentSource As ABooru
     Private _asyncLock As New SemaphoreSlim(1, 1)
 
-    Public Sub SetCurrentSource(Source As String)
+    Public Sub SetCurrentSource(Source As String, Username As String, Password As String)
         Try
             _asyncLock.Wait()
             If _currentSource IsNot Nothing Then
                 Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) get's overwritten")
             End If
             Select Case Source
+                Case "Pixiv"
+                    Dim pixiv As Pixiv = Nothing
+
+                    'Try refreshToken
+                    Dim refreshToken As String = Registry.GetRefreshToken(Source)
+                    If Not String.IsNullOrWhiteSpace(refreshToken) Then
+                        Try
+                            pixiv = New Pixiv(refreshToken)
+                        Catch ex As Exception
+                            Log(LogLvl.Warning, "Init with token failed.", ex)
+                        End Try
+                    End If
+
+                    'Try username and password
+                    If pixiv Is Nothing Then
+                        If String.IsNullOrWhiteSpace(Username) OrElse String.IsNullOrWhiteSpace(Password) Then
+                            'Reset settings
+                            CFG.Source = "Konachan"
+                            'Crash, ToDo: Make this smoother
+                            Log(LogLvl.Critical, "Pixiv only works with username and password!")
+                        End If
+                        Try
+                            pixiv = New Pixiv(Username, Password)
+                        Catch ex As Exception
+                            'Reset settings
+                            CFG.Source = "Konachan"
+
+                            Log(LogLvl.Critical, "Pixiv authentification failed", ex) 'ToDo: Improve user experience
+                        End Try
+                    End If
+
+                    'Save refreshToken
+                    Registry.SetRefreshToken(pixiv.RefreshToken)
+
+                    _currentSource = pixiv
+
                 Case "Atfbooru"
                     _currentSource = New Atfbooru()
 
@@ -106,7 +144,7 @@ Class DownloadClient
         _httpClientHandler = New HttpClientHandler
         _httpClient = New HttpClient(_httpClientHandler)
         If CFG.Source <> "LocalFile" Then
-            SetCurrentSource(CFG.Source)
+            SetCurrentSource(CFG.Source, CFG.Username, CFG.Password)
         End If
 
         Log(LogLvl.Trace, "Reached end", Source:="New DownloadClient")
@@ -169,13 +207,13 @@ Class DownloadClient
 
                 If _currentSource.HasMultipleRandomAPI() Then
                     Log(LogLvl.Trace, $"Calling GetRandomImagesAsync with (100, {If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
-                    results = Await _currentSource.GetRandomImagesAsync(100, tags.ToArray())
+                    results = Await _currentSource.GetRandomPostsAsync(100, tags.ToArray())
                     Log(LogLvl.Debug, $"Got {results.Length} search results")
                 Else
                     'Just get one
                     Log(LogLvl.Trace, $"Calling GetRandomImageAsync with ({If(tags.Count = 0, "Nothing", String.Join(" ", tags))})")
                     ReDim results(0)
-                    results(0) = Await _currentSource.GetRandomImageAsync(tags.ToArray())
+                    results(0) = Await _currentSource.GetRandomPostAsync(tags.ToArray())
                     Log(LogLvl.Debug, $"Got one result")
                 End If
 
@@ -226,7 +264,19 @@ Class DownloadClient
 
     Public Async Function DownloadFileAsync(Url As Uri) As Task(Of IO.Stream)
         Try
-            Dim response = Await _httpClient.GetAsync(Url, HttpCompletionOption.ResponseContentRead)
+            Dim response As HttpResponseMessage
+            If CFG.Source = "Pixiv" Then
+                Dim pixiv As Pixiv = TryCast(_currentSource, Pixiv)
+
+                Log(LogLvl.Debug, $"Pixiv > Download with token (*****{pixiv.Token.Substring(pixiv.Token.Length - 5)})")
+
+                Dim request = New HttpRequestMessage(New HttpMethod("GET"), Url)
+                request.Headers.Add("Authorization", "Bearer " & pixiv.Token)
+                response = Await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead)
+            Else
+                response = Await _httpClient.GetAsync(Url, HttpCompletionOption.ResponseContentRead)
+            End If
+
             response.EnsureSuccessStatusCode()
             Return Await response.Content.ReadAsStreamAsync()
         Catch ex As Exception

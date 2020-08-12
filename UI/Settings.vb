@@ -209,7 +209,7 @@ Public Class Settings
 
             'Current Source
             If CFG.Source <> tempCFG.Source Then
-                Downloader.SetCurrentSource(tempCFG.Source)
+                Downloader.SetCurrentSource(tempCFG.Source, tempCFG.Username, tempCFG.Password)
             End If
 
             'Context menu

@@ -58,6 +58,7 @@ Partial Class Settings
         Me.chbx_rating_questionable = New System.Windows.Forms.CheckBox()
         Me.chbx_rating_safe = New System.Windows.Forms.CheckBox()
         Me.tab_output = New System.Windows.Forms.TabPage()
+        Me.chbx_skip_obscured = New System.Windows.Forms.CheckBox()
         Me.txbx_slideshow_interval = New System.Windows.Forms.TextBox()
         Me.Label13 = New System.Windows.Forms.Label()
         Me.Label14 = New System.Windows.Forms.Label()
@@ -89,7 +90,6 @@ Partial Class Settings
         Me.Label21 = New System.Windows.Forms.Label()
         Me.FolderBrowserDialog_history = New System.Windows.Forms.FolderBrowserDialog()
         Me.FolderBrowserDialog_saved = New System.Windows.Forms.FolderBrowserDialog()
-        Me.chbx_skip_obscured = New System.Windows.Forms.CheckBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.tab_general.SuspendLayout()
@@ -477,6 +477,18 @@ Partial Class Settings
         Me.tab_output.TabIndex = 3
         Me.tab_output.Text = "Output"
         '
+        'chbx_skip_obscured
+        '
+        Me.chbx_skip_obscured.AutoSize = True
+        Me.chbx_skip_obscured.Checked = True
+        Me.chbx_skip_obscured.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chbx_skip_obscured.Location = New System.Drawing.Point(24, 105)
+        Me.chbx_skip_obscured.Name = "chbx_skip_obscured"
+        Me.chbx_skip_obscured.Size = New System.Drawing.Size(156, 19)
+        Me.chbx_skip_obscured.TabIndex = 6
+        Me.chbx_skip_obscured.Text = "Skip monitor if obscured"
+        Me.chbx_skip_obscured.UseVisualStyleBackColor = True
+        '
         'txbx_slideshow_interval
         '
         Me.txbx_slideshow_interval.Location = New System.Drawing.Point(24, 48)
@@ -760,18 +772,6 @@ Partial Class Settings
         Me.Label21.Size = New System.Drawing.Size(52, 15)
         Me.Label21.TabIndex = 1
         Me.Label21.Text = "Modifier"
-        '
-        'chbx_skip_obscured
-        '
-        Me.chbx_skip_obscured.AutoSize = True
-        Me.chbx_skip_obscured.Checked = True
-        Me.chbx_skip_obscured.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.chbx_skip_obscured.Location = New System.Drawing.Point(24, 105)
-        Me.chbx_skip_obscured.Name = "chbx_skip_obscured"
-        Me.chbx_skip_obscured.Size = New System.Drawing.Size(156, 19)
-        Me.chbx_skip_obscured.TabIndex = 6
-        Me.chbx_skip_obscured.Text = "Skip monitor if obscured"
-        Me.chbx_skip_obscured.UseVisualStyleBackColor = True
         '
         'Settings
         '

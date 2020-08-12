@@ -19,8 +19,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BooruSharp" Version="2.7.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0003" />
+    <PackageReference Include="BooruSharp" Version="2.8.0" />
+    <PackageReference Include="BooruSharp.Others" Version="1.1.1-beta" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0" />
   </ItemGroup>
 
   <ItemGroup>

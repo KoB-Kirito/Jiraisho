@@ -159,6 +159,33 @@ Public Class Registry
         key.CreateSubKey(Source & "\Dislikes\" & Id).Flush()
     End Sub
 
+    Public Shared Sub SetRefreshToken(Token As String)
+        'If CFG.Source <> "Pixiv" Then Throw New Exception("Only pixiv supports a refreshToken")
+
+        Try
+            Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(MAIN_KEY)
+            key.CreateSubKey(CFG.Source)
+            key.SetValue("refreshToken", Token, Microsoft.Win32.RegistryValueKind.String)
+        Catch ex As Exception
+            Log(LogLvl.Error, "Could not write refreshToken to registry", ex)
+        End Try
+    End Sub
+
+    Public Shared Function GetRefreshToken(Source As String) As String
+        If Source <> "Pixiv" Then Throw New Exception("Only pixiv supports a refreshToken")
+
+        Try
+            Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(MAIN_KEY)
+            key.OpenSubKey(CFG.Source, False)
+            Return key.GetValue("refreshToken")
+        Catch ex As Exception
+            Log(LogLvl.Warning, "Failed to get refreshToken", ex)
+            Return Nothing
+        End Try
+    End Function
+
+
+
 #Region "Context Menus"
 
     Private Shared ccmKey = "Software\Classes\DesktopBackground\Shell\" & AppName
