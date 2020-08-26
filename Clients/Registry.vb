@@ -164,8 +164,8 @@ Public Class Registry
 
         Try
             Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(MAIN_KEY)
-            key.CreateSubKey(CFG.Source)
-            key.SetValue("refreshToken", Token, Microsoft.Win32.RegistryValueKind.String)
+            Dim sKey = key.CreateSubKey(CFG.Source)
+            sKey.SetValue("refreshToken", Token, Microsoft.Win32.RegistryValueKind.String)
         Catch ex As Exception
             Log(LogLvl.Error, "Could not write refreshToken to registry", ex)
         End Try
@@ -176,8 +176,8 @@ Public Class Registry
 
         Try
             Dim key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(MAIN_KEY)
-            key.OpenSubKey(CFG.Source, False)
-            Return key.GetValue("refreshToken")
+            Dim skey = key.OpenSubKey(CFG.Source, False)
+            Return skey.GetValue("refreshToken")
         Catch ex As Exception
             Log(LogLvl.Warning, "Failed to get refreshToken", ex)
             Return Nothing

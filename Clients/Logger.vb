@@ -4,13 +4,14 @@ Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports System.Windows.Forms
 
-Module Logger 'Static
+Module Logger
     Public AppName As String = Assembly.GetCallingAssembly.GetName().Name
     Public GlobalLogLevel As LogLvl = LogLvl.Trace
-    Public FileLogDisabled As Boolean
 
     Private _fileLogger As SimpleFileLogger
+    Private _fileLogDisabled As Boolean
     Private _triedInit As Boolean 'Only try once
+
     Private PATH_LOG As String = Path.Combine(DIR_CONFIG, "log.txt")
 
     Public Enum LogLvl
@@ -23,7 +24,8 @@ Module Logger 'Static
     End Enum
 
     Public Sub Log(LogLvl As LogLvl, Message As String, Optional ex As Exception = Nothing, <CallerMemberName> Optional Source As String = "", <CallerLineNumber> Optional Line As Integer = 0)
-        If Not FileLogDisabled AndAlso Not _triedInit AndAlso _fileLogger Is Nothing Then
+        'Init Logger on first call
+        If Not _fileLogDisabled AndAlso Not _triedInit AndAlso _fileLogger Is Nothing Then
             _triedInit = True
             Try
                 Dim fi = New System.IO.FileInfo(PATH_LOG)
@@ -37,7 +39,7 @@ Module Logger 'Static
 
         If LogLvl < GlobalLogLevel Then Return
 
-        If Not FileLogDisabled AndAlso _fileLogger IsNot Nothing Then
+        If Not _fileLogDisabled AndAlso _fileLogger IsNot Nothing Then
             _fileLogger.WriteLog($"{LogLvl.ToString(),8} [{Date.Now:dd/MM/yy HH:mm:ss}] {Source}({Line,2}) {Message}{If(ex IsNot Nothing, vbCrLf & ex.ToString(), "")}")
         End If
         If LogLvl >= LogLvl.Error Then
@@ -59,8 +61,12 @@ Module Logger 'Static
         End If
     End Sub
 
+    Public Sub DisableFilelogger()
+        _fileLogDisabled = True
+    End Sub
+
     Public Sub DisposeLogger()
-        Log(LogLvl.Debug, "Logger disposed")
+        Log(LogLvl.Debug, "Disposing logger...")
         If _fileLogger IsNot Nothing Then _fileLogger.Dispose()
     End Sub
 End Module

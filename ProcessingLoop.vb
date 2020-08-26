@@ -156,7 +156,7 @@ Module ProcessingLoop
         Log(LogLvl.Info, $"Search successfull after {watch.ElapsedMilliseconds} ms")
 
         'Download image
-        Using imageStream = Await Downloader.DownloadFileAsync(result.Value.fileUrl)
+        Using imageStream = Await Downloader.DownloadFileAsync(result.Value)
             If imageStream Is Nothing Then
                 Log(LogLvl.Warning, "Download did not finish in time")
                 Return False

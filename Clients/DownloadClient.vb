@@ -38,7 +38,7 @@ Class DownloadClient
         Try
             Await _asyncLock.WaitAsync()
             If _currentSource IsNot Nothing Then
-                Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) get's overwritten")
+                Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) get's overwritten...")
             End If
             Select Case Source
                 Case "Pixiv"
@@ -49,13 +49,16 @@ Class DownloadClient
                     If Not String.IsNullOrWhiteSpace(refreshToken) Then
                         Try
                             Await pixiv.LoginAsync(refreshToken)
+                            Log(LogLvl.Info, "Pixiv login via refresh token successfull")
                         Catch ex As Exception
-                            Log(LogLvl.Warning, "Init with token failed.", ex)
+                            Log(LogLvl.Warning, "Login with refresh token failed", ex)
                         End Try
+                    Else
+                        Log(LogLvl.Debug, "Refresh token was empty")
                     End If
 
-                    'Try username and password
-                    If pixiv Is Nothing Then
+                    'If not successful -> Try username and password
+                    If String.IsNullOrWhiteSpace(pixiv.AccessToken) Then
                         If String.IsNullOrWhiteSpace(Username) OrElse String.IsNullOrWhiteSpace(Password) Then
                             'Reset settings
                             CFG.Source = "Konachan"
@@ -64,6 +67,7 @@ Class DownloadClient
                         End If
                         Try
                             Await pixiv.LoginAsync(Username, Password)
+                            Log(LogLvl.Info, "Pixiv login via username and password successfull")
                         Catch ex As Exception
                             'Reset settings
                             CFG.Source = "Konachan"
@@ -149,15 +153,18 @@ Class DownloadClient
 
 
 
-    Public Async Function CheckInternetConnection() As Task(Of Boolean)
-        Try
-            Await _currentSource.CheckAvailabilityAsync()
-            Return True
-        Catch ex As Exception
-            Log(LogLvl.Warning, _currentSource.GetType().Name & " is not available", ex)
-        End Try
+    Public Async Function CheckInternetConnectionAsync() As Task(Of Boolean)
+        'ToDo: Replace with new function
+        Return True
 
-        Return False
+        'Try
+        '    Await _currentSource.CheckAvailabilityAsync()
+        '    Return True
+        'Catch ex As Exception
+        '    Log(LogLvl.Warning, _currentSource.GetType().Name & " is not available", ex)
+        'End Try
+
+        'Return False
     End Function
 
     Public Async Function GetPostCountAsync(ParamArray Tags As String()) As Task(Of Integer)
@@ -178,14 +185,22 @@ Class DownloadClient
 
         'Init tags, add rating if set, add custom tags from config
         Dim tags As New List(Of String)
-        If CFG.Rating <> Rating.All Then tags.Add(ratingToString(CFG.Rating))
-        If CFG.CustomTags IsNot Nothing Then
-            For Each tag In CFG.CustomTags
-                tags.Add(tag)
-            Next
+        If CFG.Source = "Pixiv" Then
+            If CFG.CustomTags IsNot Nothing Then
+                For Each tag In CFG.CustomTags
+                    tags.Add(tag)
+                Next
+            Else
+                tags.Add("背景") ' background
+            End If
+        Else
+            If CFG.Rating <> Rating.All Then tags.Add(ratingToString(CFG.Rating))
+            If CFG.CustomTags IsNot Nothing Then
+                For Each tag In CFG.CustomTags
+                    tags.Add(tag)
+                Next
+            End If
         End If
-
-        'Log(LogLvl.Debug, "Search string: " & String.Join(" ", tags))
 
         Dim result As BooruSharp.Search.Post.SearchResult
         Dim ratioOfNextMonitor = Monitor.Rectangle.Width / Monitor.Rectangle.Height
@@ -234,6 +249,7 @@ Class DownloadClient
                             Continue For
                         End If
                     End If
+
                     'Min resolution
                     If CFG.MinResolution > 0 Then
                         Dim rResolutionV = res.width * res.height
@@ -261,31 +277,33 @@ Class DownloadClient
         Return result
     End Function
 
-    Public Async Function DownloadFileAsync(Url As Uri) As Task(Of IO.Stream)
+    Public Async Function DownloadFileAsync(Post As BooruSharp.Search.Post.SearchResult) As Task(Of IO.Stream)
         Try
             Dim response As HttpResponseMessage
             If CFG.Source = "Pixiv" Then
                 Dim pixiv As Pixiv = TryCast(_currentSource, Pixiv)
 
-                Log(LogLvl.Debug, $"Pixiv > Download with token (*****{pixiv.Token.Substring(pixiv.Token.Length - 5)})")
-
-                Dim request = New HttpRequestMessage(New HttpMethod("GET"), Url)
-                request.Headers.Add("Authorization", "Bearer " & pixiv.Token)
+                Dim request = New HttpRequestMessage(HttpMethod.Get, Post.fileUrl)
+                'If Not String.IsNullOrWhiteSpace(pixiv.AccessToken) Then request.Headers.Add("Authorization", "Bearer " & pixiv.AccessToken)
+                request.Headers.Add("Referer", Post.postUrl.AbsoluteUri)
                 response = Await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead)
             Else
-                response = Await _httpClient.GetAsync(Url, HttpCompletionOption.ResponseContentRead)
+                response = Await _httpClient.GetAsync(Post.fileUrl, HttpCompletionOption.ResponseContentRead)
             End If
 
             response.EnsureSuccessStatusCode()
             Return Await response.Content.ReadAsStreamAsync()
         Catch ex As Exception
-            Log(LogLvl.Warning, $"Failed to download {Url}", ex)
+            Log(LogLvl.Warning, $"Failed to download {Post.fileUrl}", ex)
             Return Nothing
         End Try
     End Function
 
     Public Async Function AddFavouriteAsync(postId As Integer) As Task
-        If _currentSource.Auth IsNot Nothing Then
+        'ToDo: pixiv
+
+
+        If _currentSource.Auth Is Nothing Then
             _currentSource.Auth = New BooruAuth(CFG.Username, CFG.Password)
         End If
 

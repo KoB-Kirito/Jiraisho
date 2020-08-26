@@ -8,14 +8,17 @@ Imports SixLabors.ImageSharp
 Module Program
 
     Sub Main(args As String()) 'Entry point
+        MainAsync(args).GetAwaiter().GetResult()
+    End Sub
 
-        ' Handles context menu calls and exits then
-        CatchContextMenuCall(args)
+    Private Async Function MainAsync(args As String()) As Task
+        ' Handle context menu calls
+        Await CatchContextMenuCallAsync(args)
 
         ' Don't allow concurrent instances of the app
         ExitIfAppIsAlreadyRunning()
 
-        ' Sets global loglevel, parsed from arguments
+        ' Set global loglevel, parse from arguments
         SetLogLevel(args)
 
         ' Hook exit event, saves current config and disposes logger
@@ -25,7 +28,7 @@ Module Program
         Log(LogLvl.Info, "Jiraisho v0.1")
         Log(LogLvl.Debug, $"IsHardwareAccelerated = {Numerics.Vector.IsHardwareAccelerated}")
 
-        ' Registers/Updates app path to enable direct calls via jiraisho.exe
+        ' Register/Update app path to enable direct calls via jiraisho.exe
         Registry.UpdateAppPath()
 
         ' Load Config from json
@@ -38,10 +41,10 @@ Module Program
         Downloader = New DownloadClient
 
         ' Check internet connection
-        CheckInternetConnection().GetAwaiter().GetResult()
+        Await CheckInternetConnectionAsync()
 
         ' Init source
-        Downloader.SetCurrentSourceAsync(CFG.Source, CFG.Username, CFG.Password).GetAwaiter().GetResult()
+        Await Downloader.SetCurrentSourceAsync(CFG.Source, CFG.Username, CFG.Password)
 
         ' Init desktop, manages monitors, desktops and wallpapers
         Desktop = New DesktopClient
@@ -55,22 +58,22 @@ Module Program
         ' Start user interface (tray icon, hotkeys, settings)
         StartUI() ' Blocks until UI closes
 
-    End Sub
+    End Function
 
 
-    Private Sub CatchContextMenuCall(args As String())
+    Private Async Function CatchContextMenuCallAsync(args As String()) As Task
         If args IsNot Nothing AndAlso args.Length > 0 AndAlso args(0).Contains("cmt") Then
             'App was called from context menu
             Try
                 'Can't access the same logfile from two applications
-                FileLogDisabled = True
+                Logger.DisableFilelogger()
 
                 'Get selected screen
                 Dim selectedScreen = Screen.FromPoint(Cursor.Position)
 
                 Select Case args(1)
                     Case "fav"
-                        UserActions.FavWallpaper(selectedScreen)
+                        Await UserActions.FavWallpaper(selectedScreen)
 
                     Case "save"
                         UserActions.SaveWallpaper(selectedScreen)
@@ -79,7 +82,7 @@ Module Program
                         UserActions.OpenWallpaper(selectedScreen)
 
                     Case "favlast"
-                        UserActions.FavWallpaper(selectedScreen, last:=True)
+                        Await UserActions.FavWallpaper(selectedScreen, last:=True)
 
                     Case "savelast"
                         UserActions.SaveWallpaper(selectedScreen, last:=True)
@@ -98,7 +101,7 @@ Module Program
                 Environment.Exit(0)
             End Try
         End If
-    End Sub
+    End Function
 
     Private Sub ExitIfAppIsAlreadyRunning()
         If System.Diagnostics.Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(System.Reflection.Assembly.GetEntryAssembly().Location)).Count() > 1 Then
@@ -150,8 +153,8 @@ Module Program
     End Sub
 
     Private Sub ProcessExit(sender As Object, e As EventArgs)
-        Dim json = JsonConvert.SerializeObject(CFG, Formatting.Indented)
         Try
+            Dim json = JsonConvert.SerializeObject(CFG, Formatting.Indented)
             Dim fi = New System.IO.FileInfo(PATH_CONFIG)
             fi.Directory.Create()
             File.WriteAllText(PATH_CONFIG, json, New UTF8Encoding(False))
@@ -286,11 +289,11 @@ Module Program
         Log(LogLvl.Trace, "Reached end")
     End Sub
 
-    Private Async Function CheckInternetConnection() As Task
+    Private Async Function CheckInternetConnectionAsync() As Task
         Log(LogLvl.Trace, "Called")
 
         Dim failCount As Integer
-        Do While Not Await Downloader.CheckInternetConnection()
+        Do While Not Await Downloader.CheckInternetConnectionAsync()
             failCount += 1
             If failCount > 3 Then
                 Log(LogLvl.Critical, $"Can't reach the internet.{vbCrLf}Can't download wallpapers without access to the internet.")
