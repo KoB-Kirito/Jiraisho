@@ -40,6 +40,9 @@ Module Program
         ' Check internet connection
         CheckInternetConnection().GetAwaiter().GetResult()
 
+        ' Init source
+        Downloader.SetCurrentSourceAsync(CFG.Source, CFG.Username, CFG.Password).GetAwaiter().GetResult()
+
         ' Init desktop, manages monitors, desktops and wallpapers
         Desktop = New DesktopClient
 

@@ -84,7 +84,7 @@ Public Class Settings
 
     End Sub
 
-    Private Sub OK_Button_Click(ByVal sender As Object, ByVal e As EventArgs) Handles OK_Button.Click
+    Private Async Sub OK_Button_Click(ByVal sender As Object, ByVal e As EventArgs) Handles OK_Button.Click
         Log(LogLvl.Debug, "Called")
 
         'Check all changes before applying
@@ -209,7 +209,7 @@ Public Class Settings
 
             'Current Source
             If CFG.Source <> tempCFG.Source Then
-                Downloader.SetCurrentSource(tempCFG.Source, tempCFG.Username, tempCFG.Password)
+                Await Downloader.SetCurrentSourceAsync(tempCFG.Source, tempCFG.Username, tempCFG.Password)
             End If
 
             'Context menu

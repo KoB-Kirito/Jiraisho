@@ -34,21 +34,21 @@ Class DownloadClient
     Private _currentSource As ABooru
     Private _asyncLock As New SemaphoreSlim(1, 1)
 
-    Public Sub SetCurrentSource(Source As String, Username As String, Password As String)
+    Public Async Function SetCurrentSourceAsync(Source As String, Username As String, Password As String) As Task
         Try
-            _asyncLock.Wait()
+            Await _asyncLock.WaitAsync()
             If _currentSource IsNot Nothing Then
                 Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) get's overwritten")
             End If
             Select Case Source
                 Case "Pixiv"
-                    Dim pixiv As Pixiv = Nothing
+                    Dim pixiv As New Pixiv
 
                     'Try refreshToken
                     Dim refreshToken As String = Registry.GetRefreshToken(Source)
                     If Not String.IsNullOrWhiteSpace(refreshToken) Then
                         Try
-                            pixiv = New Pixiv(refreshToken)
+                            Await pixiv.LoginAsync(refreshToken)
                         Catch ex As Exception
                             Log(LogLvl.Warning, "Init with token failed.", ex)
                         End Try
@@ -63,7 +63,7 @@ Class DownloadClient
                             Log(LogLvl.Critical, "Pixiv only works with username and password!")
                         End If
                         Try
-                            pixiv = New Pixiv(Username, Password)
+                            Await pixiv.LoginAsync(Username, Password)
                         Catch ex As Exception
                             'Reset settings
                             CFG.Source = "Konachan"
@@ -136,19 +136,18 @@ Class DownloadClient
         Finally
             _asyncLock.Release()
         End Try
-    End Sub
+    End Function
 
     Public Sub New()
         Log(LogLvl.Trace, "Called", Source:="New DownloadClient")
 
         _httpClientHandler = New HttpClientHandler
         _httpClient = New HttpClient(_httpClientHandler)
-        If CFG.Source <> "LocalFile" Then
-            SetCurrentSource(CFG.Source, CFG.Username, CFG.Password)
-        End If
 
         Log(LogLvl.Trace, "Reached end", Source:="New DownloadClient")
     End Sub
+
+
 
     Public Async Function CheckInternetConnection() As Task(Of Boolean)
         Try

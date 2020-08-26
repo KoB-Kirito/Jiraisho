@@ -1,14 +1,14 @@
 ﻿Imports System.Windows.Forms
 
 Public Class UserActions
-    Public Shared Sub FavWallpaper(screen As Screen, Optional last As Boolean = False)
+    Public Shared Async Function FavWallpaper(screen As Screen, Optional last As Boolean = False) As Task
         Dim monitorInfo = Registry.GetMonitorInfoFor(screen.DeviceName)
         If last Then
-            Downloader.AddFavouriteAsync(monitorInfo.LastId) 'ToDo: implement
+            Await Downloader.AddFavouriteAsync(monitorInfo.LastId) 'ToDo: implement
         Else
-            Downloader.AddFavouriteAsync(monitorInfo.CurrId) 'ToDo: implement
+            Await Downloader.AddFavouriteAsync(monitorInfo.CurrId) 'ToDo: implement
         End If
-    End Sub
+    End Function
 
     Public Shared Sub SaveWallpaper(screen As Screen, Optional last As Boolean = False)
         Dim dirSaved = Registry.GetValue("DirSaved")
