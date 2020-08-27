@@ -292,7 +292,7 @@ Module Program
     Private Async Function CheckInternetConnectionAsync() As Task
         Log(LogLvl.Trace, "Called")
 
-        Dim failCount As Integer
+        Dim failCount As Integer = 0
         Do While Not Await Downloader.CheckInternetConnectionAsync()
             failCount += 1
             If failCount > 3 Then

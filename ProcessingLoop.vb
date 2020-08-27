@@ -156,12 +156,16 @@ Module ProcessingLoop
         Log(LogLvl.Info, $"Search successfull after {watch.ElapsedMilliseconds} ms")
 
         'Download image
-        Using imageStream = Await Downloader.DownloadFileAsync(result.Value)
-            If imageStream Is Nothing Then
-                Log(LogLvl.Warning, "Download did not finish in time")
-                Return False
-            End If
-            Log(LogLvl.Debug, $"Download successfull after {watch.ElapsedMilliseconds} ms")
+        Dim imageArray = Await Downloader.DownloadFileAsync(result.Value)
+        Log(LogLvl.Debug, $"{imageArray.Length}")
+        If imageArray Is Nothing Then
+            Log(LogLvl.Warning, "Download did not finish in time")
+            Return False
+        End If
+        Log(LogLvl.Debug, $"Download successfull after {watch.ElapsedMilliseconds} ms")
+
+        Using imageStream = New MemoryStream(imageArray)
+            Log(LogLvl.Debug, $"Stream build after {watch.ElapsedMilliseconds} ms")
 
             'Prepare and save image
             Dim originalPath As String = ""
@@ -181,7 +185,7 @@ Module ProcessingLoop
             'Load image for alteration
             'ToDo: Skip if not nessesary
             Using source = Image.Load(imageStream)
-                'Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
+                Log(LogLvl.Trace, $"Source before manipulation: {source.Width} x {source.Height} (Monitor: {Monitor.Rectangle.Width} x {Monitor.Rectangle.Height})")
 
                 'Mutate image depending on set style
                 Select Case CFG.Style(Monitor.Id)
@@ -189,20 +193,20 @@ Module ProcessingLoop
                         Log(LogLvl.Trace, "Mutating image for FitLeft")
                         source.Mutate(Sub(x)
                                           x.Resize(New ResizeOptions() With {
-                                                      .Mode = ResizeMode.Pad,
-                                                      .Size = New Size(Monitor.Rectangle.Width, Monitor.Rectangle.Height),
-                                                      .Position = AnchorPositionMode.Left
-                                                   })
+                                                          .Mode = ResizeMode.Pad,
+                                                          .Size = New Size(Monitor.Rectangle.Width, Monitor.Rectangle.Height),
+                                                          .Position = AnchorPositionMode.Left
+                                                       })
                                       End Sub)
 
                     Case CustomStyle.FitRight
                         Log(LogLvl.Trace, "Mutating image for FitRight")
                         source.Mutate(Sub(x)
                                           x.Resize(New ResizeOptions() With {
-                                                       .Mode = ResizeMode.Pad,
-                                                       .Size = New Size(Monitor.Rectangle.Width, Monitor.Rectangle.Height),
-                                                       .Position = AnchorPositionMode.Right
-                                                   })
+                                                           .Mode = ResizeMode.Pad,
+                                                           .Size = New Size(Monitor.Rectangle.Width, Monitor.Rectangle.Height),
+                                                           .Position = AnchorPositionMode.Right
+                                                       })
                                       End Sub)
 
                     Case Else

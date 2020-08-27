@@ -154,17 +154,21 @@ Class DownloadClient
 
 
     Public Async Function CheckInternetConnectionAsync() As Task(Of Boolean)
-        'ToDo: Replace with new function
+
+        Dim response As HttpResponseMessage = Nothing
+        Try
+            response = Await _httpClient.GetAsync("https://1.1.1.1", HttpCompletionOption.ResponseHeadersRead)
+        Catch ex As Exception
+            Log(LogLvl.Warning, "Failed to access internet: " & ex.Message)
+            Return False
+        End Try
+        If response Is Nothing OrElse Not response.IsSuccessStatusCode Then
+            If response IsNot Nothing Then Log(LogLvl.Warning, "Failed to access internet: " & response.StatusCode.ToString())
+            Return False
+        End If
+
+        Log(LogLvl.Info, "Internet connection OK")
         Return True
-
-        'Try
-        '    Await _currentSource.CheckAvailabilityAsync()
-        '    Return True
-        'Catch ex As Exception
-        '    Log(LogLvl.Warning, _currentSource.GetType().Name & " is not available", ex)
-        'End Try
-
-        'Return False
     End Function
 
     Public Async Function GetPostCountAsync(ParamArray Tags As String()) As Task(Of Integer)
@@ -277,22 +281,27 @@ Class DownloadClient
         Return result
     End Function
 
-    Public Async Function DownloadFileAsync(Post As BooruSharp.Search.Post.SearchResult) As Task(Of IO.Stream)
+    Public Async Function DownloadFileAsync(Post As BooruSharp.Search.Post.SearchResult) As Task(Of Byte())
         Try
             Dim response As HttpResponseMessage
             If CFG.Source = "Pixiv" Then
                 Dim pixiv As Pixiv = TryCast(_currentSource, Pixiv)
 
-                Dim request = New HttpRequestMessage(HttpMethod.Get, Post.fileUrl)
-                'If Not String.IsNullOrWhiteSpace(pixiv.AccessToken) Then request.Headers.Add("Authorization", "Bearer " & pixiv.AccessToken)
-                request.Headers.Add("Referer", Post.postUrl.AbsoluteUri)
-                response = Await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead)
+                Log(LogLvl.Debug, $"{If(Post.size, "size is null")} ({Post.width}x{Post.height})")
+                Log(LogLvl.Debug, $"Post: " & Post.postUrl.AbsoluteUri)
+                Log(LogLvl.Debug, $"File: " & Post.fileUrl.AbsoluteUri)
+                Return Await pixiv.ImageToByteArrayAsync(Post)
+
+                'Dim request = New HttpRequestMessage(HttpMethod.Get, Post.fileUrl)
+                ''If Not String.IsNullOrWhiteSpace(pixiv.AccessToken) Then request.Headers.Add("Authorization", "Bearer " & pixiv.AccessToken)
+                'request.Headers.Add("Referer", Post.postUrl.AbsoluteUri)
+                'response = Await _httpClient.SendAsync(request, HttpCompletionOption.ResponseContentRead)
             Else
-                response = Await _httpClient.GetAsync(Post.fileUrl, HttpCompletionOption.ResponseContentRead)
+                response = Await _httpClient.GetAsync(Post.fileUrl, HttpCompletionOption.ResponseHeadersRead)
             End If
 
             response.EnsureSuccessStatusCode()
-            Return Await response.Content.ReadAsStreamAsync()
+            Return Await response.Content.ReadAsByteArrayAsync()
         Catch ex As Exception
             Log(LogLvl.Warning, $"Failed to download {Post.fileUrl}", ex)
             Return Nothing
