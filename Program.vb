@@ -178,13 +178,22 @@ Module Program
             .Rating = Rating.Safe,
             .IntervalInSeconds = 30,
             .SkipObscuredMonitors = True,
+            .PauseIfIdling = True,
             .DirHistory = Path.Combine(Path.GetTempPath(), AppName, "History"),
             .DirSaved = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), AppName),
             .MaxHistory = 10,
             .HK_SaveCurrent = (HK_Modifier.MOD_ALT, Keys.S),
             .HK_OpenCurrent = (HK_Modifier.MOD_ALT, Keys.O),
             .HK_FavCurrent = (HK_Modifier.MOD_ALT, Keys.F),
-            .ContextMenu = ContextMenuType.Cascaded,
+            .ContextMenu = ContextMenuType.Grouped,
+            .ContextMenuFav = True,
+            .ContextMenuDislike = True,
+            .ContextMenuSave = True,
+            .ContextMenuOpen = True,
+            .ContextMenuFavLast = True,
+            .ContextMenuDislikeLast = True,
+            .ContextMenuSaveLast = True,
+            .ContextMenuOpenLast = True,
             .SettingsWindowDefaultPosition = New Drawing.Point(256, 256) 'ToDo: Store this in registry
         }
 
@@ -242,7 +251,7 @@ Module Program
         If modi < HK_Modifier.MOD_ALT OrElse modi > HK_Modifier.MOD_CONTROL_SHIFT OrElse modi = HK_Modifier.MOD_WIN OrElse modi = HK_Modifier.MOD_NOREPEAT Then
             CFG.HK_OpenCurrent = defaultConfig.HK_OpenCurrent
         End If
-        If CFG.ContextMenu < ContextMenuType.None OrElse CFG.ContextMenu > ContextMenuType.Cascaded Then
+        If CFG.ContextMenu < ContextMenuType.None OrElse CFG.ContextMenu > ContextMenuType.CascadedGrouped Then
             CFG.ContextMenu = defaultConfig.ContextMenu
         End If
         If CFG.SettingsWindowDefaultPosition.X < 0 OrElse CFG.SettingsWindowDefaultPosition.Y < 0 Then
@@ -251,20 +260,10 @@ Module Program
 
         'Update registry
         Registry.SetValue("DirSaved", CFG.DirSaved)
-        Select Case CFG.ContextMenu
-            Case ContextMenuType.None
-                Registry.DeleteContextMenu()
-                Registry.DeleteCascadedContextMenu()
-
-            Case ContextMenuType.Normal
-                Registry.DeleteCascadedContextMenu()
-                Registry.CreateContextMenu()
-
-            Case ContextMenuType.Cascaded
-                Registry.DeleteContextMenu()
-                Registry.CreateCascadedContextMenu()
-
-        End Select
+        Registry.DeleteContextMenu()
+        If CFG.ContextMenu <> ContextMenuType.None Then
+            Registry.CreateContextMenu(CFG.ContextMenu, CFG.ContextMenuFav, CFG.ContextMenuDislike, CFG.ContextMenuSave, CFG.ContextMenuOpen, CFG.ContextMenuFavLast, CFG.ContextMenuDislikeLast, CFG.ContextMenuSaveLast, CFG.ContextMenuOpenLast)
+        End If
 
 
         Log(LogLvl.Trace, "Reached end")
@@ -358,22 +357,31 @@ Module Program
         <JsonProperty(Order:=10)> Public IntervalInSeconds As Integer
         <JsonProperty(Order:=11)> Public Style As SortedList(Of Integer, CustomStyle)
         <JsonProperty(Order:=12)> Public SkipObscuredMonitors As Boolean
+        <JsonProperty(Order:=13)> Public PauseIfIdling As Boolean
 
         'Files
-        <JsonProperty(Order:=13)> Public DirHistory As String
-        <JsonProperty(Order:=14)> Public DirSaved As String
-        <JsonProperty(Order:=15)> Public MaxHistory As Integer
+        <JsonProperty(Order:=14)> Public DirHistory As String
+        <JsonProperty(Order:=15)> Public DirSaved As String
+        <JsonProperty(Order:=16)> Public MaxHistory As Integer
 
         'Hotkeys
-        <JsonProperty(Order:=16)> Public HK_SaveCurrent As (HK_Modifier, Keys)
-        <JsonProperty(Order:=17)> Public HK_OpenCurrent As (HK_Modifier, Keys)
-        <JsonProperty(Order:=18)> Public HK_FavCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=17)> Public HK_SaveCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=18)> Public HK_OpenCurrent As (HK_Modifier, Keys)
+        <JsonProperty(Order:=19)> Public HK_FavCurrent As (HK_Modifier, Keys)
 
         'ContextMenu
-        <JsonProperty(Order:=19)> Public ContextMenu As ContextMenuType
+        <JsonProperty(Order:=20)> Public ContextMenu As ContextMenuType
+        <JsonProperty(Order:=21)> Public ContextMenuFav As Boolean
+        <JsonProperty(Order:=22)> Public ContextMenuDislike As Boolean
+        <JsonProperty(Order:=23)> Public ContextMenuSave As Boolean
+        <JsonProperty(Order:=24)> Public ContextMenuOpen As Boolean
+        <JsonProperty(Order:=25)> Public ContextMenuFavLast As Boolean
+        <JsonProperty(Order:=26)> Public ContextMenuDislikeLast As Boolean
+        <JsonProperty(Order:=27)> Public ContextMenuSaveLast As Boolean
+        <JsonProperty(Order:=28)> Public ContextMenuOpenLast As Boolean
 
         'Misc
-        <JsonProperty(Order:=20)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
+        <JsonProperty(Order:=29)> Public SettingsWindowDefaultPosition As Drawing.Point 'ToDo: Save this in registry?
 
         Public Function Clone() As Config
             Return Me.MemberwiseClone()

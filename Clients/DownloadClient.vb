@@ -8,6 +8,29 @@ Imports Newtonsoft.Json
 Imports SixLabors.ImageSharp
 
 Class DownloadClient
+
+    'ToDo: Use enum?
+    'Public Enum SourcesE
+    '    Pixiv
+    '    Atfbooru
+    '    Danbooru
+    '    E621
+    '    E926
+    '    Furrybooru
+    '    Gelbooru
+    '    Konachan
+    '    Lolibooru
+    '    Realbooru
+    '    Rule34
+    '    Safebooru
+    '    Sakugabooru
+    '    SankakuComplex
+    '    Wildcritters
+    '    Xbooru
+    '    Yandere
+    '    LocalFolder
+    'End Enum
+
     Public Shared ReadOnly Property Sources As New List(Of String) From {
         "Pixiv",
         "Atfbooru",
@@ -31,6 +54,7 @@ Class DownloadClient
 
     Private _httpClient As HttpClient
     Private _httpClientHandler As HttpClientHandler
+    Private _httpClientSet As Boolean
     Private _currentSource As ABooru
     Private _asyncLock As New SemaphoreSlim(1, 1)
 
@@ -38,11 +62,18 @@ Class DownloadClient
         Try
             Await _asyncLock.WaitAsync()
             If _currentSource IsNot Nothing Then
-                Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) get's overwritten...")
+                Log(LogLvl.Warning, $"Source({_currentSource.GetType().Name}) Get's overwritten...")
             End If
             Select Case Source
                 Case "Pixiv"
                     Dim pixiv As New Pixiv
+
+                    'Set httpClient
+                    If Not _httpClientSet Then
+                        _httpClientSet = True
+
+                        pixiv.HttpClient = _httpClient
+                    End If
 
                     'Try refreshToken
                     Dim refreshToken As String = Registry.GetRefreshToken(Source)
@@ -134,7 +165,10 @@ Class DownloadClient
                     Log(LogLvl.Warning, "Source set to Nothing")
             End Select
 
-            If _currentSource IsNot Nothing Then
+            'Set httpClient
+            If Not _httpClientSet Then
+                _httpClientSet = True
+
                 _currentSource.HttpClient = _httpClient
             End If
         Finally
@@ -310,7 +344,9 @@ Class DownloadClient
 
     Public Async Function AddFavouriteAsync(postId As Integer) As Task
         'ToDo: pixiv
-
+        If CFG.Source = "Pixiv" Then
+            Return
+        End If
 
         If _currentSource.Auth Is Nothing Then
             _currentSource.Auth = New BooruAuth(CFG.Username, CFG.Password)

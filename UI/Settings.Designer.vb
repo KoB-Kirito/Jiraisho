@@ -23,8 +23,9 @@ Partial Class Settings
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
-        Me.OK_Button = New System.Windows.Forms.Button()
         Me.Cancel_Button = New System.Windows.Forms.Button()
+        Me.OK_Button = New System.Windows.Forms.Button()
+        Me.Apply_Button = New System.Windows.Forms.Button()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.tab_general = New System.Windows.Forms.TabPage()
         Me.chbo_check_for_updates = New System.Windows.Forms.CheckBox()
@@ -88,8 +89,23 @@ Partial Class Settings
         Me.cobo_hk_save_modifier = New System.Windows.Forms.ComboBox()
         Me.Label22 = New System.Windows.Forms.Label()
         Me.Label21 = New System.Windows.Forms.Label()
+        Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.radio_ctm_none = New System.Windows.Forms.RadioButton()
+        Me.radio_ctm_cascadedgrouped = New System.Windows.Forms.RadioButton()
+        Me.radio_ctm_grouped = New System.Windows.Forms.RadioButton()
+        Me.radio_ctm_cascaded = New System.Windows.Forms.RadioButton()
+        Me.radio_ctm_direct = New System.Windows.Forms.RadioButton()
+        Me.Label27 = New System.Windows.Forms.Label()
         Me.FolderBrowserDialog_history = New System.Windows.Forms.FolderBrowserDialog()
         Me.FolderBrowserDialog_saved = New System.Windows.Forms.FolderBrowserDialog()
+        Me.chbo_ctm_fav = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_dislike = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_save = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_open = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_favlast = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_dislikelast = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_savelast = New System.Windows.Forms.CheckBox()
+        Me.chbo_ctm_openlast = New System.Windows.Forms.CheckBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.tab_general.SuspendLayout()
@@ -102,23 +118,36 @@ Partial Class Settings
         Me.TabPage1.SuspendLayout()
         Me.GroupBox3.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
+        Me.TabPage2.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
         '
         Me.TableLayoutPanel1.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.TableLayoutPanel1.ColumnCount = 2
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
+        Me.TableLayoutPanel1.ColumnCount = 3
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.34!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33!))
+        Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33!))
+        Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
-        Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(618, 698)
+        Me.TableLayoutPanel1.Controls.Add(Me.Apply_Button, 1, 0)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(460, 698)
         Me.TableLayoutPanel1.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
-        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
-        Me.TableLayoutPanel1.Size = New System.Drawing.Size(316, 70)
+        Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100.0!))
+        Me.TableLayoutPanel1.Size = New System.Drawing.Size(464, 70)
         Me.TableLayoutPanel1.TabIndex = 0
+        '
+        'Cancel_Button
+        '
+        Me.Cancel_Button.Anchor = System.Windows.Forms.AnchorStyles.None
+        Me.Cancel_Button.Location = New System.Drawing.Point(161, 6)
+        Me.Cancel_Button.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
+        Me.Cancel_Button.Name = "Cancel_Button"
+        Me.Cancel_Button.Size = New System.Drawing.Size(140, 58)
+        Me.Cancel_Button.TabIndex = 0
+        Me.Cancel_Button.Text = "Cancel"
         '
         'OK_Button
         '
@@ -126,19 +155,19 @@ Partial Class Settings
         Me.OK_Button.Location = New System.Drawing.Point(7, 6)
         Me.OK_Button.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
         Me.OK_Button.Name = "OK_Button"
-        Me.OK_Button.Size = New System.Drawing.Size(143, 58)
+        Me.OK_Button.Size = New System.Drawing.Size(140, 58)
         Me.OK_Button.TabIndex = 0
         Me.OK_Button.Text = "OK"
         '
-        'Cancel_Button
+        'Apply_Button
         '
-        Me.Cancel_Button.Anchor = System.Windows.Forms.AnchorStyles.None
-        Me.Cancel_Button.Location = New System.Drawing.Point(165, 6)
-        Me.Cancel_Button.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
-        Me.Cancel_Button.Name = "Cancel_Button"
-        Me.Cancel_Button.Size = New System.Drawing.Size(143, 58)
-        Me.Cancel_Button.TabIndex = 1
-        Me.Cancel_Button.Text = "Abbrechen"
+        Me.Apply_Button.Anchor = System.Windows.Forms.AnchorStyles.None
+        Me.Apply_Button.Location = New System.Drawing.Point(315, 6)
+        Me.Apply_Button.Margin = New System.Windows.Forms.Padding(7, 6, 7, 6)
+        Me.Apply_Button.Name = "Apply_Button"
+        Me.Apply_Button.Size = New System.Drawing.Size(142, 58)
+        Me.Apply_Button.TabIndex = 1
+        Me.Apply_Button.Text = "Apply"
         '
         'TabControl1
         '
@@ -148,6 +177,7 @@ Partial Class Settings
         Me.TabControl1.Controls.Add(Me.tab_output)
         Me.TabControl1.Controls.Add(Me.tab_files)
         Me.TabControl1.Controls.Add(Me.TabPage1)
+        Me.TabControl1.Controls.Add(Me.TabPage2)
         Me.TabControl1.Dock = System.Windows.Forms.DockStyle.Top
         Me.TabControl1.Location = New System.Drawing.Point(0, 0)
         Me.TabControl1.Margin = New System.Windows.Forms.Padding(6)
@@ -839,6 +869,170 @@ Partial Class Settings
         Me.Label21.TabIndex = 1
         Me.Label21.Text = "Modifier"
         '
+        'TabPage2
+        '
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_openlast)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_savelast)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_dislikelast)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_favlast)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_open)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_save)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_dislike)
+        Me.TabPage2.Controls.Add(Me.chbo_ctm_fav)
+        Me.TabPage2.Controls.Add(Me.radio_ctm_none)
+        Me.TabPage2.Controls.Add(Me.radio_ctm_cascadedgrouped)
+        Me.TabPage2.Controls.Add(Me.radio_ctm_grouped)
+        Me.TabPage2.Controls.Add(Me.radio_ctm_cascaded)
+        Me.TabPage2.Controls.Add(Me.radio_ctm_direct)
+        Me.TabPage2.Controls.Add(Me.Label27)
+        Me.TabPage2.Location = New System.Drawing.Point(8, 46)
+        Me.TabPage2.Name = "TabPage2"
+        Me.TabPage2.Size = New System.Drawing.Size(926, 637)
+        Me.TabPage2.TabIndex = 6
+        Me.TabPage2.Text = "Context Menu"
+        '
+        'radio_ctm_none
+        '
+        Me.radio_ctm_none.AutoSize = True
+        Me.radio_ctm_none.Location = New System.Drawing.Point(25, 585)
+        Me.radio_ctm_none.Name = "radio_ctm_none"
+        Me.radio_ctm_none.Size = New System.Drawing.Size(283, 36)
+        Me.radio_ctm_none.TabIndex = 7
+        Me.radio_ctm_none.Text = "Disable Context Menu"
+        Me.radio_ctm_none.UseVisualStyleBackColor = True
+        '
+        'radio_ctm_cascadedgrouped
+        '
+        Me.radio_ctm_cascadedgrouped.AutoSize = True
+        Me.radio_ctm_cascadedgrouped.Location = New System.Drawing.Point(457, 400)
+        Me.radio_ctm_cascadedgrouped.Name = "radio_ctm_cascadedgrouped"
+        Me.radio_ctm_cascadedgrouped.Size = New System.Drawing.Size(269, 36)
+        Me.radio_ctm_cascadedgrouped.TabIndex = 6
+        Me.radio_ctm_cascadedgrouped.Text = "Cascaded + Grouped"
+        Me.radio_ctm_cascadedgrouped.UseVisualStyleBackColor = True
+        '
+        'radio_ctm_grouped
+        '
+        Me.radio_ctm_grouped.AutoSize = True
+        Me.radio_ctm_grouped.Location = New System.Drawing.Point(21, 400)
+        Me.radio_ctm_grouped.Name = "radio_ctm_grouped"
+        Me.radio_ctm_grouped.Size = New System.Drawing.Size(138, 36)
+        Me.radio_ctm_grouped.TabIndex = 5
+        Me.radio_ctm_grouped.Text = "Grouped"
+        Me.radio_ctm_grouped.UseVisualStyleBackColor = True
+        '
+        'radio_ctm_cascaded
+        '
+        Me.radio_ctm_cascaded.AutoSize = True
+        Me.radio_ctm_cascaded.Checked = True
+        Me.radio_ctm_cascaded.Location = New System.Drawing.Point(457, 23)
+        Me.radio_ctm_cascaded.Name = "radio_ctm_cascaded"
+        Me.radio_ctm_cascaded.Size = New System.Drawing.Size(146, 36)
+        Me.radio_ctm_cascaded.TabIndex = 4
+        Me.radio_ctm_cascaded.TabStop = True
+        Me.radio_ctm_cascaded.Text = "Cascaded"
+        Me.radio_ctm_cascaded.UseVisualStyleBackColor = True
+        '
+        'radio_ctm_direct
+        '
+        Me.radio_ctm_direct.AutoSize = True
+        Me.radio_ctm_direct.Location = New System.Drawing.Point(25, 23)
+        Me.radio_ctm_direct.Name = "radio_ctm_direct"
+        Me.radio_ctm_direct.Size = New System.Drawing.Size(108, 36)
+        Me.radio_ctm_direct.TabIndex = 3
+        Me.radio_ctm_direct.Text = "Direct"
+        Me.radio_ctm_direct.UseVisualStyleBackColor = True
+        '
+        'Label27
+        '
+        Me.Label27.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.Label27.Location = New System.Drawing.Point(21, 572)
+        Me.Label27.Margin = New System.Windows.Forms.Padding(6, 0, 6, 0)
+        Me.Label27.Name = "Label27"
+        Me.Label27.Size = New System.Drawing.Size(884, 4)
+        Me.Label27.TabIndex = 2
+        '
+        'chbo_ctm_fav
+        '
+        Me.chbo_ctm_fav.AutoSize = True
+        Me.chbo_ctm_fav.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point)
+        Me.chbo_ctm_fav.Location = New System.Drawing.Point(38, 65)
+        Me.chbo_ctm_fav.Name = "chbo_ctm_fav"
+        Me.chbo_ctm_fav.Size = New System.Drawing.Size(230, 36)
+        Me.chbo_ctm_fav.TabIndex = 8
+        Me.chbo_ctm_fav.Text = "Add to favourites"
+        Me.chbo_ctm_fav.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_dislike
+        '
+        Me.chbo_ctm_dislike.AutoSize = True
+        Me.chbo_ctm_dislike.Location = New System.Drawing.Point(38, 107)
+        Me.chbo_ctm_dislike.Name = "chbo_ctm_dislike"
+        Me.chbo_ctm_dislike.Size = New System.Drawing.Size(232, 36)
+        Me.chbo_ctm_dislike.TabIndex = 9
+        Me.chbo_ctm_dislike.Text = "Don't show again"
+        Me.chbo_ctm_dislike.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_save
+        '
+        Me.chbo_ctm_save.AutoSize = True
+        Me.chbo_ctm_save.Location = New System.Drawing.Point(38, 149)
+        Me.chbo_ctm_save.Name = "chbo_ctm_save"
+        Me.chbo_ctm_save.Size = New System.Drawing.Size(174, 36)
+        Me.chbo_ctm_save.TabIndex = 10
+        Me.chbo_ctm_save.Text = "Save to disk"
+        Me.chbo_ctm_save.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_open
+        '
+        Me.chbo_ctm_open.AutoSize = True
+        Me.chbo_ctm_open.Location = New System.Drawing.Point(38, 191)
+        Me.chbo_ctm_open.Name = "chbo_ctm_open"
+        Me.chbo_ctm_open.Size = New System.Drawing.Size(223, 36)
+        Me.chbo_ctm_open.TabIndex = 12
+        Me.chbo_ctm_open.Text = "Open in browser"
+        Me.chbo_ctm_open.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_favlast
+        '
+        Me.chbo_ctm_favlast.AutoSize = True
+        Me.chbo_ctm_favlast.Location = New System.Drawing.Point(38, 233)
+        Me.chbo_ctm_favlast.Name = "chbo_ctm_favlast"
+        Me.chbo_ctm_favlast.Size = New System.Drawing.Size(273, 36)
+        Me.chbo_ctm_favlast.TabIndex = 13
+        Me.chbo_ctm_favlast.Text = "Add last to favourites"
+        Me.chbo_ctm_favlast.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_dislikelast
+        '
+        Me.chbo_ctm_dislikelast.AutoSize = True
+        Me.chbo_ctm_dislikelast.Location = New System.Drawing.Point(38, 275)
+        Me.chbo_ctm_dislikelast.Name = "chbo_ctm_dislikelast"
+        Me.chbo_ctm_dislikelast.Size = New System.Drawing.Size(275, 36)
+        Me.chbo_ctm_dislikelast.TabIndex = 14
+        Me.chbo_ctm_dislikelast.Text = "Don't show last again"
+        Me.chbo_ctm_dislikelast.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_savelast
+        '
+        Me.chbo_ctm_savelast.AutoSize = True
+        Me.chbo_ctm_savelast.Location = New System.Drawing.Point(38, 317)
+        Me.chbo_ctm_savelast.Name = "chbo_ctm_savelast"
+        Me.chbo_ctm_savelast.Size = New System.Drawing.Size(217, 36)
+        Me.chbo_ctm_savelast.TabIndex = 15
+        Me.chbo_ctm_savelast.Text = "Save last to disk"
+        Me.chbo_ctm_savelast.UseVisualStyleBackColor = True
+        '
+        'chbo_ctm_openlast
+        '
+        Me.chbo_ctm_openlast.AutoSize = True
+        Me.chbo_ctm_openlast.Location = New System.Drawing.Point(38, 358)
+        Me.chbo_ctm_openlast.Name = "chbo_ctm_openlast"
+        Me.chbo_ctm_openlast.Size = New System.Drawing.Size(266, 36)
+        Me.chbo_ctm_openlast.TabIndex = 16
+        Me.chbo_ctm_openlast.Text = "Open last in browser"
+        Me.chbo_ctm_openlast.UseVisualStyleBackColor = True
+        '
         'Settings
         '
         Me.AcceptButton = Me.OK_Button
@@ -878,12 +1072,14 @@ Partial Class Settings
         Me.GroupBox3.PerformLayout()
         Me.GroupBox2.ResumeLayout(False)
         Me.GroupBox2.PerformLayout()
+        Me.TabPage2.ResumeLayout(False)
+        Me.TabPage2.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
     Friend WithEvents TableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents OK_Button As System.Windows.Forms.Button
-    Friend WithEvents Cancel_Button As System.Windows.Forms.Button
+    Friend WithEvents Apply_Button As System.Windows.Forms.Button
     Friend WithEvents TabControl1 As Windows.Forms.TabControl
     Friend WithEvents tab_general As Windows.Forms.TabPage
     Friend WithEvents tab_source As Windows.Forms.TabPage
@@ -949,4 +1145,20 @@ Partial Class Settings
     Friend WithEvents Label26 As Windows.Forms.Label
     Friend WithEvents chbo_context_menu_cascaded As Windows.Forms.CheckBox
     Friend WithEvents chbx_skip_obscured As Windows.Forms.CheckBox
+    Friend WithEvents TabPage2 As Windows.Forms.TabPage
+    Friend WithEvents Label27 As Windows.Forms.Label
+    Friend WithEvents radio_ctm_none As Windows.Forms.RadioButton
+    Friend WithEvents radio_ctm_cascadedgrouped As Windows.Forms.RadioButton
+    Friend WithEvents radio_ctm_grouped As Windows.Forms.RadioButton
+    Friend WithEvents radio_ctm_cascaded As Windows.Forms.RadioButton
+    Friend WithEvents radio_ctm_direct As Windows.Forms.RadioButton
+    Friend WithEvents Cancel_Button As Windows.Forms.Button
+    Friend WithEvents chbo_ctm_openlast As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_savelast As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_dislikelast As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_favlast As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_open As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_save As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_dislike As Windows.Forms.CheckBox
+    Friend WithEvents chbo_ctm_fav As Windows.Forms.CheckBox
 End Class
